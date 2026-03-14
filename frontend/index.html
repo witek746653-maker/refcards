@@ -9,15 +9,33 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,700;1,400&display=swap"
     rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/material-darker.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/markdown/markdown.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/shell/shell.min.js"></script>
   <style>
     :root {
       --bg: #f8f9fa;
+      --bg-panel: #fff;
       --sidebar: #fff;
       --border: #e9ecef;
       --text: #212529;
       --text-dim: #6c757d;
       --accent: #4361ee;
       --resizer: #dee2e6;
+      --toolbar: #fff;
+    }
+
+    body.dark-theme {
+      --bg: #1e1e1e;
+      --bg-panel: #1e1e1e;
+      --sidebar: #252526;
+      --border: #333333;
+      --text: #cccccc;
+      --text-dim: #858585;
+      --resizer: #3c3c3c;
+      --toolbar: #2d2d2d;
     }
 
     * {
@@ -69,7 +87,7 @@
 
     .conn-wrap {
       padding: 12px 16px;
-      background: #fafbfc;
+      background: var(--bg);
       border-bottom: 1px solid var(--border);
     }
 
@@ -86,6 +104,8 @@
       border-radius: 6px;
       font-size: 13px;
       outline: none;
+      background: var(--bg-panel);
+      color: var(--text);
     }
 
     .btn-conn {
@@ -138,7 +158,8 @@
       padding: 8px;
       border: 1px solid var(--border);
       border-radius: 6px;
-      background: #fff;
+      background: var(--bg-panel);
+      color: var(--text);
       cursor: pointer;
       font-size: 13px;
       font-weight: 500;
@@ -175,11 +196,11 @@
     }
 
     .ci:hover {
-      background: #f0f2f5;
+      background: var(--bg);
     }
 
     .ci.active {
-      background: #eef2ff;
+      background: rgba(67, 97, 238, 0.1);
     }
 
     .ca {
@@ -247,7 +268,7 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      background: #fff;
+      background: var(--bg);
       min-width: 0;
     }
 
@@ -257,7 +278,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      background: #fff;
+      background: var(--toolbar);
     }
 
     .toolbar input,
@@ -267,6 +288,8 @@
       border-radius: 6px;
       font-size: 13px;
       outline: none;
+      background: var(--bg-panel);
+      color: var(--text);
     }
 
     #card-name-input {
@@ -299,6 +322,8 @@
       flex: 1;
       display: flex;
       flex-direction: column;
+      position: relative;
+      overflow: hidden;
     }
 
     #md-textarea {
@@ -310,8 +335,32 @@
       font-family: 'IBM Plex Mono', monospace;
       font-size: 14px;
       line-height: 1.6;
-      color: #333;
+      color: var(--text);
+      background: var(--bg-panel);
     }
+
+    .CodeMirror {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      height: 100%;
+      font-size: 14px;
+      line-height: 1.6;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    /* IDE Highlighting for Dark Theme */
+    .dark-theme .cm-s-material-darker.CodeMirror { background: #1e1e1e !important; color: #d4d4d4; }
+    .dark-theme .cm-s-material-darker .cm-header { color: #569cd6 !important; font-weight: bold; }
+    .dark-theme .cm-s-material-darker .cm-strong { color: #569cd6 !important; font-weight: bold; }
+    .dark-theme .cm-s-material-darker .cm-em { color: #ce9178 !important; }
+    .dark-theme .cm-s-material-darker .cm-quote { color: #ce9178 !important; }
+    .dark-theme .cm-s-material-darker .cm-comment { color: #6a9955 !important; }
+    .dark-theme .cm-s-material-darker .cm-variable-2 { color: #9cdcfe !important; }
+    .dark-theme .cm-s-material-darker .cm-string { color: #dcdcaa !important; }
+    .dark-theme .cm-s-material-darker .cm-atom { color: #dcdcaa !important; }
+    .dark-theme .cm-s-material-darker .cm-number { color: #b5cea8 !important; }
+    .dark-theme .cm-s-material-darker .cm-link { color: #4fc1ff !important; }
+    .dark-theme .cm-s-material-darker .cm-cursor { border-left: 2px solid #aeafad !important; }
 
     #preview-pane {
       flex: 1;
@@ -489,6 +538,7 @@
 
   <div id="main">
     <div class="toolbar">
+      <button class="toggle-view-btn" onclick="toggleTheme()" title="Сменить тему">🌓</button>
       <button class="toggle-view-btn" onclick="toggleEditor()" title="Редактор">📝</button>
       <input id="card-name-input" placeholder="Название карточки" oninput="onNameChange()" disabled>
       <select id="domain-select" onchange="onDomainChange(this.value)" disabled>
@@ -713,12 +763,26 @@
       const area = $('ed-area'); if (!area) return;
       if (state.selectedId) {
         area.classList.remove('empty-state');
-        area.innerHTML = '<textarea id="md-textarea" spellcheck="false"></textarea>';
-        textarea = $('md-textarea'); textarea.value = state.editorText;
-        textarea.oninput = function () { state.editorText = this.value; state.isDirty = true; updateSaveBtn(); schedulePreview(); };
+        area.innerHTML = '<textarea id="md-textarea"></textarea>';
+        
+        state.cm = CodeMirror.fromTextArea($('md-textarea'), {
+          mode: 'markdown',
+          theme: document.body.classList.contains('dark-theme') ? 'material-darker' : 'default',
+          lineWrapping: true,
+          viewportMargin: 10
+        });
+        
+        state.cm.setValue(state.editorText);
+        state.cm.on('change', () => {
+          state.editorText = state.cm.getValue();
+          state.isDirty = true;
+          updateSaveBtn();
+          schedulePreview();
+        });
       } else {
         area.classList.add('empty-state');
-        area.innerHTML = 'Выбери карточку'; textarea = null;
+        area.innerHTML = 'Выбери карточку';
+        state.cm = null;
       }
     }
 
@@ -882,6 +946,18 @@
     const savedZoom = localStorage.getItem(LS_ZOOM_KEY) || 0.7;
     $('zoom-slider').value = savedZoom;
     applyZoom(savedZoom);
+
+    function toggleTheme() {
+      const isDark = document.body.classList.toggle('dark-theme');
+      localStorage.setItem('refcards-theme', isDark ? 'dark' : 'light');
+      if (state.cm) {
+        state.cm.setOption('theme', isDark ? 'material-darker' : 'default');
+      }
+    }
+
+    if (localStorage.getItem('refcards-theme') === 'dark') {
+      document.body.classList.add('dark-theme');
+    }
 
     document.addEventListener('keydown', e => { if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); saveCard(); } });
     if (API_BASE) { $('server-url').value = API_BASE; connect(); }
