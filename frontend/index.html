@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Refcards</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,700;1,400&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8f9fa;
+      --sidebar: #fff;
+      --border: #e9ecef;
+      --text: #212529;
+      --text-dim: #6c757d;
+      --accent: #4361ee;
+      --resizer: #dee2e6;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    #sidebar {
+      width: 280px;
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      position: relative;
+      transition: width 0.1s ease;
+    }
+
+    #sidebar.collapsed {
+      width: 0 !important;
+      overflow: hidden;
+      border-right: none;
+    }
+
+    .sb-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sb-header h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .conn-wrap {
+      padding: 12px 16px;
+      background: #fafbfc;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    #server-url {
+      flex: 1;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .btn-conn {
+      padding: 6px 12px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .status-line {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ccc;
+    }
+
+    .dot.ok {
+      background: #2ecc71;
+    }
+
+    .dot.err {
+      background: #e74c3c;
+    }
+
+    .dot.wait {
+      background: #f1c40f;
+    }
+
+    .sb-actions {
+      padding: 12px 16px;
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .btn-action {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #fff;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .btn-action:hover {
+      background: #f8f9fa;
+    }
+
+    .btn-action:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    #card-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .ci {
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: 0.2s;
+    }
+
+    .ci:hover {
+      background: #f0f2f5;
+    }
+
+    .ci.active {
+      background: #eef2ff;
+    }
+
+    .ca {
+      width: 4px;
+      height: 32px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .cinfo {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .cn {
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cd {
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .cdel {
+      opacity: 0;
+      padding: 4px 8px;
+      border: none;
+      background: none;
+      color: #999;
+      cursor: pointer;
+      font-size: 16px;
+      border-radius: 4px;
+    }
+
+    .ci:hover .cdel {
+      opacity: 1;
+    }
+
+    .cdel:hover {
+      background: #fee2e2;
+      color: #ef4444;
+    }
+
+    /* Resizer */
+    .resizer {
+      width: 4px;
+      background: var(--resizer);
+      cursor: col-resize;
+      transition: background 0.2s;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    .resizer:hover,
+    .resizer.dragging {
+      background: var(--accent);
+    }
+
+    /* Main Area */
+    #main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      min-width: 0;
+    }
+
+    .toolbar {
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #fff;
+    }
+
+    .toolbar input,
+    .toolbar select {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    #card-name-input {
+      flex: 1;
+      font-weight: 600;
+      min-width: 0;
+    }
+
+    .editor-layout {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    #editor-pane {
+      width: 40%;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      min-width: 100px;
+      transition: width 0.1s ease;
+    }
+
+    #editor-pane.collapsed {
+      width: 0 !important;
+      overflow: hidden;
+    }
+
+    #ed-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #md-textarea {
+      flex: 1;
+      padding: 24px;
+      border: none;
+      resize: none;
+      outline: none;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #333;
+    }
+
+    #preview-pane {
+      flex: 1;
+      background: #525659;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #preview-pane.collapsed {
+      display: none;
+    }
+
+    .preview-controls {
+      position: absolute;
+      top: 16px;
+      right: 24px;
+      display: flex;
+      gap: 8px;
+      z-index: 20;
+    }
+
+    .zoom-widget {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      padding: 4px 12px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #fff;
+      font-size: 12px;
+    }
+
+    .zoom-widget input {
+      width: 100px;
+      cursor: pointer;
+    }
+
+    .toggle-view-btn {
+      background: #fff;
+      border: 1px solid var(--border);
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    #preview-scroll-area {
+      flex: 1;
+      overflow: auto;
+      padding: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    #pv-content {
+      transform-origin: top center;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      background: #fff;
+      width: 210mm;
+      min-height: 297mm;
+      border-radius: 2px;
+      transition: transform 0.1s ease;
+    }
+
+    #preview-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      min-height: 297mm;
+    }
+
+    .empty-state {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-dim);
+      text-align: center;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    #toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      opacity: 0;
+      transition: 0.3s;
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    #toast.show {
+      opacity: 1;
+      bottom: 30px;
+    }
+
+    /* Icons */
+    .icon-btn {
+      background: none;
+      border: none;
+      padding: 4px;
+      cursor: pointer;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+    }
+
+    .icon-btn:hover {
+      background: #f0f2f5;
+      color: var(--text);
+    }
+
+    #floating-expand-btn {
+      position: fixed;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 0 4px 4px 0;
+      padding: 10px 4px;
+      cursor: pointer;
+      display: none;
+      z-index: 100;
+    }
+  </style>
+</head>
+
+<body>
+
+  <button id="floating-expand-btn" onclick="toggleSidebar()">▶</button>
+
+  <div id="sidebar">
+    <div class="sb-header">
+      <h1>Refcards</h1>
+      <button class="icon-btn" onclick="toggleSidebar()" title="Свернуть">◀</button>
+    </div>
+    <div class="conn-wrap">
+      <div class="input-row">
+        <input id="server-url" placeholder="Адрес сервера (IP)">
+        <button id="connect-btn" class="btn-conn" onclick="connect()">Вход</button>
+      </div>
+      <div class="status-line">
+        <div id="status-dot" class="dot"></div> <span id="status-text">Оффлайн</span>
+      </div>
+    </div>
+    <div class="sb-actions">
+      <button id="new-btn" class="btn-action" onclick="createCard()" disabled>+ Новая</button>
+      <button id="import-btn" class="btn-action" onclick="importMD()" disabled>Импорт</button>
+      <input type="file" id="md-import-input" multiple hidden onchange="onImportFiles(this)">
+    </div>
+    <div id="card-list"></div>
+  </div>
+
+  <div class="resizer" id="resizer-1"></div>
+
+  <div id="main">
+    <div class="toolbar">
+      <button class="toggle-view-btn" onclick="toggleEditor()" title="Редактор">📝</button>
+      <input id="card-name-input" placeholder="Название карточки" oninput="onNameChange()" disabled>
+      <select id="domain-select" onchange="onDomainChange(this.value)" disabled>
+        <option value="programming">Программирование</option>
+        <option value="language_en">Английский</option>
+        <option value="language_fr">Французский</option>
+        <option value="art">Искусство</option>
+        <option value="literature_fiction">Худ. литература</option>
+        <option value="literature_nonfiction">Нон-фикшн</option>
+        <option value="culture">Культура</option>
+        <option value="psychology">Психология</option>
+        <option value="lyrics">Поэзия и песни</option>
+        <option value="default">Общий</option>
+      </select>
+      <select id="density-select" onchange="onDensityChange(this.value)" disabled>
+        <option value="low">Свободно</option>
+        <option value="medium">Нормально</option>
+        <option value="high">Плотно</option>
+      </select>
+      <button id="save-btn" class="btn-action" onclick="saveCard()" disabled>Сохранить</button>
+      <button id="export-btn" class="btn-action" onclick="exportPDF()" disabled>Экспорт PDF</button>
+      <button class="toggle-view-btn" onclick="togglePreview()" title="Предпросмотр">👁️</button>
+    </div>
+
+    <div class="editor-layout">
+      <div id="editor-pane">
+        <div id="ed-area" class="empty-state">Выбери карточку</div>
+      </div>
+
+      <div class="resizer" id="resizer-2"></div>
+
+      <div id="preview-pane">
+        <div class="preview-controls">
+          <div class="zoom-widget">
+            <span>Зум:</span>
+            <input type="range" min="0.3" max="2" step="0.05" value="0.7" id="zoom-slider"
+              oninput="applyZoom(this.value)">
+            <span id="zoom-val">70%</span>
+          </div>
+        </div>
+        <div id="preview-scroll-area">
+          <div id="pv-content">
+            <div id="preview-empty" class="empty-state">Предпросмотр</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+  <script>
+    const LS_SERVER_KEY = 'refcards-server-url';
+    const LS_ZOOM_KEY = 'refcards-preview-zoom';
+    let API_BASE = localStorage.getItem(LS_SERVER_KEY) || '';
+
+    const DOMAINS = {
+      programming: { label: "Программирование", accent: "#4361ee" },
+      language_fr: { label: "Французский", accent: "#c0392b" },
+      language_en: { label: "Английский", accent: "#00897b" },
+      art: { label: "Искусство", accent: "#b8860b" },
+      literature_fiction: { label: "Худ. литература", accent: "#4a7c59" },
+      literature_nonfiction: { label: "Нон-фикшн", accent: "#4a90a4" },
+      culture: { label: "Культура", accent: "#e07a5f" },
+      psychology: { label: "Психология", accent: "#7c5cbf" },
+      lyrics: { label: "Поэзия и Песни", accent: "#7f8c8d" },
+      default: { label: "Общий", accent: "#6b7280" }
+    };
+
+    const THEMES = {
+      programming: { p: "#0f3460", h1l: "#e94560", h2b: "#0f3460", h2t: "#fff", h3b: "#e8f0fe", h3br: "#4361ee", h3t: "#0f3460", cb: "#1a1a2e", ct: "#e2e8f8", cbr: "#4361ee", ib: "#e8f0fe", it: "#0f3460", th: "#0f3460", te: "#f0f4ff", qb: "#fff8e7", qbr: "#f4a261", qt: "#4a3800", body: "#1a1a2e", fb: "'IBM Plex Sans',sans-serif", fm: "'IBM Plex Mono',monospace", fh: "'IBM Plex Sans',sans-serif", ac: "#4361ee", cols: 2, bpt: 8, cpt: 6.8 },
+      language_fr: { p: "#5c1a1a", h1l: "#e67e22", h2b: "#5c1a1a", h2t: "#fff5e6", h3b: "#fff0e0", h3br: "#c0392b", h3t: "#5c1a1a", cb: "#fff5e6", ct: "#5c1a1a", cbr: "#e67e22", ib: "#fdebd0", it: "#5c1a1a", th: "#7b2d00", te: "#fff5e6", qb: "#fef9f0", qbr: "#e67e22", qt: "#5c1a1a", body: "#2c1810", fb: "'Lora','Georgia',serif", fm: "'IBM Plex Sans',sans-serif", fh: "'IBM Plex Sans',sans-serif", ac: "#c0392b", cols: 2, bpt: 8.5, cpt: 7.5 },
+      language_en: { p: "#1a3a4a", h1l: "#00acc1", h2b: "#1a3a4a", h2t: "#e0f7f4", h3b: "#e0f2f1", h3br: "#00897b", h3t: "#1a3a4a", cb: "#e8f5f4", ct: "#1a3a4a", cbr: "#00acc1", ib: "#e0f2f1", it: "#00695c", th: "#00695c", te: "#e8f5e9", qb: "#f0fbff", qbr: "#00acc1", qt: "#004d5a", body: "#1a2a2a", fb: "'IBM Plex Sans',sans-serif", fm: "'IBM Plex Sans',sans-serif", fh: "'IBM Plex Sans',sans-serif", ac: "#00897b", cols: 2, bpt: 8.5, cpt: 7.5 },
+      art: { p: "#3d0c02", h1l: "#b8860b", h2b: "#3d0c02", h2t: "#fdf6e3", h3b: "#fdf6e3", h3br: "#b8860b", h3t: "#3d0c02", cb: "#fdf6e3", ct: "#3d0c02", cbr: "#b8860b", ib: "#fef9e7", it: "#5c3d02", th: "#5c2000", te: "#fdf6e3", qb: "#fffbf0", qbr: "#b8860b", qt: "#3d2b00", body: "#1a0a00", fb: "'Lora','Georgia',serif", fm: "'IBM Plex Sans',sans-serif", fh: "'IBM Plex Sans',sans-serif", ac: "#b8860b", cols: 2, bpt: 8.5, cpt: 7.5 },
+      literature_fiction: { p: "#1a3a1a", h1l: "#d4800a", h2b: "#1a3a1a", h2t: "#f5f5dc", h3b: "#f0f7ec", h3br: "#4a7c59", h3t: "#1a3a1a", cb: "#faf7f0", ct: "#2c1f00", cbr: "#d4800a", ib: "#f5f5dc", it: "#2c1f00", th: "#2d5a27", te: "#f0f7ec", qb: "#fdf8ef", qbr: "#d4800a", qt: "#3d2b00", body: "#1a1a0a", fb: "'Lora','Georgia',serif", fm: "'IBM Plex Sans',sans-serif", fh: "'IBM Plex Sans',sans-serif", ac: "#d4800a", cols: 2, bpt: 8.5, cpt: 7.5 },
+      literature_nonfiction: { p: "#1c3557", h1l: "#4a90a4", h2b: "#1c3557", h2t: "#e8f4f8", h3b: "#e8f4f8", h3br: "#4a90a4", h3t: "#1c3557", cb: "#f0f7fb", ct: "#1c3557", cbr: "#4a90a4", ib: "#ddeef5", it: "#1c3557", th: "#1c3557", te: "#eef6fa", qb: "#f5fbff", qbr: "#4a90a4", qt: "#1c3557", body: "#1a1a2a", fb: "'IBM Plex Sans',sans-serif", fm: "'IBM Plex Sans',sans-serif", fh: "'IBM Plex Sans',sans-serif", ac: "#4a90a4", cols: 2, bpt: 8, cpt: 7 },
+      culture: { p: "#1a4a4a", h1l: "#e07a5f", h2b: "#1a4a4a", h2t: "#f7ede8", h3b: "#fdf0ec", h3br: "#e07a5f", h3t: "#1a4a4a", cb: "#fdf0ec", ct: "#3d1a0a", cbr: "#e07a5f", ib: "#fde8e0", it: "#3d1a0a", th: "#1a4a4a", te: "#fdf0ec", qb: "#f7fafa", qbr: "#2a9d8f", qt: "#1a4a4a", body: "#1a1a1a", fb: "'IBM Plex Sans',sans-serif", fm: "'IBM Plex Sans',sans-serif", fh: "'IBM Plex Sans',sans-serif", ac: "#e07a5f", cols: 2, bpt: 8.5, cpt: 7.5 },
+      psychology: { p: "#2d1b69", h1l: "#9b72cf", h2b: "#2d1b69", h2t: "#f0eaff", h3b: "#f0eaff", h3br: "#7c5cbf", h3t: "#2d1b69", cb: "#f5f0ff", ct: "#2d1b69", cbr: "#9b72cf", ib: "#ede8ff", it: "#2d1b69", th: "#2d1b69", te: "#f5f0ff", qb: "#fdf8ff", qbr: "#9b72cf", qt: "#2d1b69", body: "#1a1020", fb: "'IBM Plex Sans',sans-serif", fm: "'IBM Plex Sans',sans-serif", fh: "'IBM Plex Sans',sans-serif", ac: "#7c5cbf", cols: 2, bpt: 8.5, cpt: 7.5 },
+      lyrics: { p: "#2c3e50", h1l: "#7f8c8d", h2b: "#2c3e50", h2t: "#fff", h3b: "#f9f9f9", h3br: "#95a5a6", h3t: "#2c3e50", cb: "#fff", ct: "#2c3e50", cbr: "#bdc3c7", ib: "#f4f4f4", it: "#2c3e50", th: "#2c3e50", te: "#f9f9f9", qb: "#fff", qbr: "#7f8c8d", qt: "#2c3e50", body: "#1a1a1a", fb: "'Lora',serif", fm: "'IBM Plex Sans',sans-serif", fh: "'Lora',serif", ac: "#2980b9", cols: 2, bpt: 9, cpt: 8 },
+      default: { p: "#2c3e50", h1l: "#e74c3c", h2b: "#2c3e50", h2t: "#fff", h3b: "#eaf2fb", h3br: "#3498db", h3t: "#2c3e50", cb: "#1a1a2e", ct: "#e2e8f8", cbr: "#3498db", ib: "#eaf2fb", it: "#2c305a", th: "#2c3e50", te: "#eaf2fb", qb: "#fef9e7", qbr: "#f39c12", qt: "#4a3800", body: "#1a1a2e", fb: "'IBM Plex Sans',sans-serif", fm: "'IBM Plex Mono',monospace", fh: "'IBM Plex Sans',sans-serif", ac: "#3498db", cols: 2, bpt: 8, cpt: 6.8 }
+    };
+
+    function buildCSS(domain, density) {
+      const t = THEMES[domain] || THEMES.default;
+      let bpt = t.bpt + (density === 'high' ? -0.5 : density === 'low' ? 0.5 : 0), cols = density === 'low' ? 1 : t.cols;
+      return `*{box-sizing:border-box}body{font-family:${t.fb};font-size:${bpt}pt;line-height:1.35;color:${t.body};background:white;column-count:${cols};column-gap:8mm;column-fill:balance;text-align:justify;hyphens:auto;padding:10mm;margin:0;counter-reset:img-nb}h1{column-span:all;font-family:${t.fh};font-size:13pt;font-weight:700;color:${t.p};border-bottom:2px solid ${t.h1l};padding-bottom:3px;margin:0 0 2px;break-after:avoid}h1+p{column-span:all;font-style:italic;color:#666;font-size:7.5pt;margin:0 0 6px}h2{column-span:all;font-family:${t.fh};font-size:9pt;font-weight:700;color:${t.h2t};background:${t.h2b};padding:3px 7px;margin:15px 0 8px;break-after:avoid;border-radius:2px}h3{font-family:${t.fh};font-size:8pt;font-weight:700;color:${t.h3t};background:${t.h3b};border-left:3px solid ${t.h3br};padding:2px 6px;margin:12px 0 6px;break-after:avoid;border-radius:0 2px 2px 0}h4{font-size:7.5pt;font-weight:700;color:${t.p};margin:10px 0 4px;break-after:avoid}.section-h3{break-inside:avoid}p{margin:0 0 3px}pre{background:${t.cb};color:${t.ct};border-radius:3px;padding:4px 7px;font-family:${t.fm};font-size:${t.cpt}pt;line-height:1.3;margin:8px 0;break-inside:auto;border-left:2px solid ${t.cbr};white-space:pre-wrap;word-break:break-all;width:100%;overflow:hidden}code{font-family:${t.fm};background:${t.ib};color:${t.it};padding:0 3px;border-radius:2px;font-size:${t.cpt}pt}pre code{background:none;color:inherit;padding:0}table{width:100%;border-collapse:collapse;margin:10px 0;font-size:7pt;break-inside:auto;overflow:hidden}thead tr{background:${t.th};color:white}thead th{padding:3px 5px;text-align:left;font-weight:600}tbody tr:nth-child(even){background:${t.te}}tbody tr:nth-child(odd){background:white}tbody td{padding:2px 5px;border-bottom:1px solid #dde;vertical-align:top}blockquote{background:${t.qb};border-left:3px solid ${t.qbr};margin:10px 0;padding:5px 10px;border-radius:0 3px 3px 0;font-size:7.5pt;color:${t.qt};break-inside:auto;font-style:italic;width:100%;overflow:hidden}blockquote p{margin:0}ul,ol{margin:8px 0;padding-left:14px;break-inside:auto}li{margin-bottom:2px;line-height:1.3;break-inside:auto}strong{font-weight:700;color:${t.p}}em{color:#555}hr{border:none;border-top:1px solid #dde;margin:4px 0}a{color:${t.ac}}figure{margin:10px 0;break-inside:avoid;display:flex;flex-direction:column;align-items:center}figure img{max-width:100%;border-radius:4px;border:0.5px solid #ddd}figcaption{font-size:7.5pt;color:#666;margin-top:4px;font-style:italic}figcaption::before{counter-increment:img-nb;content:"Рис. " counter(img-nb) ": ";font-weight:700}@page{size:A4;margin:10mm 11mm}`;
+    }
+
+    function parseFM(text) {
+      const m = text.match(/^---\s*\n([\s\S]*?)\n---\s*(?:\n|$)([\s\S]*)$/);
+      if (!m) return { meta: {}, content: text };
+      const meta = {};
+      m[1].split('\n').forEach(l => {
+        const i = l.indexOf(':');
+        if (i > 0) meta[l.slice(0, i).trim()] = l.slice(i + 1).trim();
+      });
+      return { meta, content: m[2] };
+    }
+
+    function setFMField(text, key, val) {
+      const { meta, content } = parseFM(text);
+      meta[key] = val;
+      return `---\n${Object.entries(meta).map(([k, v]) => `${k}: ${v}`).join('\n')}\n---\n${content}`;
+    }
+
+    function wrapSections(html) {
+      try {
+        const doc = new DOMParser().parseFromString(`<div id="r">${html}</div>`, 'text/html');
+        const root = doc.getElementById('r');
+        [...root.querySelectorAll('h3')].forEach(h3 => {
+          const w = doc.createElement('div'); w.className = 'section-h3';
+          root.insertBefore(w, h3); w.appendChild(h3);
+          let n = w.nextSibling;
+          while (n && !['H1', 'H2', 'H3'].includes(n.nodeName)) { const t = n.nextSibling; w.appendChild(n); n = t; }
+        });
+        return root.innerHTML;
+      } catch { return html; }
+    }
+
+    function buildPreviewHTML(md_text) {
+      const { meta, content } = parseFM(md_text);
+      const css = buildCSS(meta.domain || 'default', meta.density || 'medium');
+      const body = wrapSections(marked.parse(content || ''));
+      return `<!DOCTYPE html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"><style>${css}</style></head><body>${body}</body></html>`;
+    }
+
+    let state = { cards: [], selectedId: null, editorText: '', isDirty: false, searchQuery: '', connected: false };
+    let previewTimer = null, textarea = null, previewFrame = null;
+    const TMPL = (d = 'programming') => `---\ndomain: ${d}\ndensity: medium\n---\n\n# Название карточки\n\n## Раздел 1\n\n### Тема\n\nКраткое объяснение.\n\n| Параметр | Значение |\n|---|---|\n| Пример | Данные |\n\n> Важное замечание.\n`;
+
+    function $(id) { return document.getElementById(id); }
+    function escHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function hlMatch(text, q) { if (!q) return escHtml(text); const i = text.toLowerCase().indexOf(q); if (i < 0) return escHtml(text); return escHtml(text.slice(0, i)) + '<mark>' + escHtml(text.slice(i, i + q.length)) + '</mark>' + escHtml(text.slice(i + q.length)); }
+    function toast(msg, ms = 2200) { const el = $('toast'); el.textContent = msg; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), ms); }
+
+    function normalizeUrl(url) {
+      url = url.trim().replace(/\/+$/, '');
+      if (url && !url.startsWith('http')) url = 'http://' + url;
+      return url;
+    }
+
+    function setStatus(s, text) {
+      const dot = $('status-dot'), txt = $('status-text');
+      dot.className = 'dot ' + s;
+      txt.textContent = text;
+    }
+
+    async function connect() {
+      const raw = $('server-url').value;
+      const url = normalizeUrl(raw);
+      if (!url) { setStatus('err', 'Введи адрес сервера'); return; }
+
+      setStatus('wait', 'Связь...');
+      $('connect-btn').disabled = true;
+
+      try {
+        const r = await fetch(`${url}/api/health`, { signal: AbortSignal.timeout(5000) });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        API_BASE = url;
+        localStorage.setItem(LS_SERVER_KEY, url);
+        state.connected = true;
+        setStatus('ok', `Онлайн · ${data.cards}`);
+        enableUI();
+        loadCards();
+      } catch (e) {
+        setStatus('err', 'Ошибка: ' + e.message);
+        $('connect-btn').disabled = false;
+      }
+    }
+
+    function enableUI() {
+      $('card-name-input').disabled = false;
+      $('domain-select').disabled = false;
+      $('density-select').disabled = false;
+      $('new-btn').disabled = false;
+      $('import-btn').disabled = false;
+      $('connect-btn').disabled = false;
+    }
+
+    async function api(method, path, body) {
+      const opts = { method, headers: { 'Content-Type': 'application/json' } };
+      if (body) opts.body = JSON.stringify(body);
+      const r = await fetch(`${API_BASE}${path}`, opts);
+      if (!r.ok) throw new Error(`${method} ${path} → ${r.status}`);
+      return r.json();
+    }
+
+    function renderList() {
+      const list = $('card-list');
+      if (!state.connected) { list.innerHTML = '<div class="empty-state">Нет связи</div>'; return; }
+      if (state.cards.length === 0) { list.innerHTML = '<div class="empty-state">Пусто</div>'; return; }
+      list.innerHTML = state.cards.map(c => {
+        const di = DOMAINS[c.domain] || DOMAINS.default, active = c.id === state.selectedId;
+        return `<div class="ci${active ? ' active' : ''}" onclick="selectCard('${c.id}')">
+      <div class="ca" style="background:${di.accent}"></div>
+      <div class="cinfo"><div class="cn">${escHtml(c.name)}</div><div class="cd">${escHtml(di.label)}</div></div>
+      <button class="cdel" onclick="deleteCard('${c.id}',event)">×</button>
+    </div>`;
+      }).join('');
+    }
+
+    function updateSaveBtn() {
+      const btn = $('save-btn'); if (!btn) return;
+      const { meta } = parseFM(state.editorText);
+      const di = DOMAINS[meta.domain || 'default'] || DOMAINS.default;
+      if (state.isDirty && state.selectedId) { btn.style.cssText = `background:${di.accent};color:#fff;border:none`; btn.textContent = 'Сохранить'; btn.disabled = false; }
+      else { btn.style.cssText = ''; btn.textContent = 'Ок'; btn.disabled = !state.selectedId; }
+    }
+
+    function schedulePreview() {
+      clearTimeout(previewTimer);
+      previewTimer = setTimeout(() => {
+        if (!previewFrame || !state.selectedId) return;
+        const html = buildPreviewHTML(state.editorText);
+        try { previewFrame.contentDocument.open(); previewFrame.contentDocument.write(html); previewFrame.contentDocument.close(); } catch (e) { }
+      }, 400);
+    }
+
+    function mountEditor() {
+      const area = $('ed-area'); if (!area) return;
+      if (state.selectedId) {
+        area.classList.remove('empty-state');
+        area.innerHTML = '<textarea id="md-textarea" spellcheck="false"></textarea>';
+        textarea = $('md-textarea'); textarea.value = state.editorText;
+        textarea.oninput = function () { state.editorText = this.value; state.isDirty = true; updateSaveBtn(); schedulePreview(); };
+      } else {
+        area.classList.add('empty-state');
+        area.innerHTML = 'Выбери карточку'; textarea = null;
+      }
+    }
+
+    function mountPreview() {
+      const c = $('pv-content'); if (!c) return;
+      if (state.selectedId) {
+        c.innerHTML = '<iframe id="preview-frame" title="Превью"></iframe>';
+        previewFrame = $('preview-frame'); schedulePreview();
+      } else {
+        c.innerHTML = '<div class="empty-state">Превью</div>'; previewFrame = null;
+      }
+    }
+
+    function syncToolbar() {
+      const { meta } = parseFM(state.editorText);
+      const ni = $('card-name-input');
+      if (ni) { ni.value = state.cards.find(c => c.id === state.selectedId)?.name || ''; ni.disabled = !state.selectedId; }
+      const ds = $('domain-select'); if (ds) { ds.value = meta.domain || 'programming'; ds.disabled = !state.selectedId; }
+      const de = $('density-select'); if (de) { de.value = meta.density || 'medium'; de.disabled = !state.selectedId; }
+      updateSaveBtn();
+      $('export-btn').disabled = !state.selectedId;
+    }
+
+    async function loadCards() {
+      try {
+        state.cards = await api('GET', '/api/cards');
+        renderList();
+      } catch (e) { toast('Ошибка загрузки'); }
+    }
+
+    async function selectCard(id) {
+      if (state.isDirty && !confirm('Сбросить правки?')) return;
+      try {
+        const card = await api('GET', `/api/cards/${id}`);
+        state.selectedId = id; state.editorText = card.content || ''; state.isDirty = false;
+        mountEditor(); mountPreview(); syncToolbar(); renderList();
+      } catch (e) { toast('Ошибка'); }
+    }
+
+    async function saveCard() {
+      if (!state.selectedId) return;
+      const { meta } = parseFM(state.editorText);
+      const name = $('card-name-input')?.value.trim() || 'Без названия';
+      const domain = meta.domain || 'default';
+      try {
+        await api('PUT', `/api/cards/${state.selectedId}`, { name, domain, content: state.editorText });
+        state.cards = state.cards.map(c => c.id === state.selectedId ? { ...c, name, domain } : c);
+        state.isDirty = false; updateSaveBtn(); renderList();
+        toast('Сохранено');
+      } catch (e) { toast('Ошибка сохранения'); }
+    }
+
+    async function createCard() {
+      try {
+        const card = await api('POST', '/api/cards', { name: 'Новая', domain: 'programming', content: TMPL('programming') });
+        state.cards = [card, ...state.cards];
+        selectCard(card.id);
+      } catch (e) { toast('Ошибка создания'); }
+    }
+
+    async function deleteCard(id, e) {
+      e.stopPropagation();
+      if (!confirm('Удалить?')) return;
+      try {
+        await api('DELETE', `/api/cards/${id}`);
+        state.cards = state.cards.filter(c => c.id !== id);
+        if (state.selectedId === id) { state.selectedId = null; mountEditor(); mountPreview(); syncToolbar(); }
+        renderList();
+      } catch (e) { toast('Ошибка удаления'); }
+    }
+
+    function onNameChange() { state.isDirty = true; updateSaveBtn(); }
+    function onDomainChange(domain) { state.editorText = setFMField(state.editorText, 'domain', domain); if (textarea) textarea.value = state.editorText; state.isDirty = true; updateSaveBtn(); schedulePreview(); }
+    function onDensityChange(density) { state.editorText = setFMField(state.editorText, 'density', density); if (textarea) textarea.value = state.editorText; state.isDirty = true; updateSaveBtn(); schedulePreview(); }
+
+    async function importMD() { $('md-import-input').click(); }
+    async function onImportFiles(inp) {
+      if (!inp.files.length) return;
+      const fd = new FormData();
+      for (const f of inp.files) fd.append('files', f);
+      try {
+        await fetch(`${API_BASE}/api/cards/import`, { method: 'POST', body: fd });
+        loadCards(); toast('Импорт завершен');
+      } catch (e) { toast('Ошибка импорта'); }
+      finally { inp.value = ''; }
+    }
+
+    async function exportPDF() {
+      if (!state.selectedId) return;
+      const btn = $('export-btn'); btn.textContent = '...'; btn.disabled = true;
+      const name = ($('card-name-input')?.value || 'refcard').replace(/\s+/g, '-');
+      try {
+        const res = await fetch(`${API_BASE}/api/pdf`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ markdown: state.editorText, filename: name }) });
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = `${name}.pdf`; a.click();
+        toast('PDF готов');
+      } catch (err) { toast('Ошибка PDF'); }
+      finally { btn.textContent = 'Экспорт PDF'; btn.disabled = false; }
+    }
+
+    // --- UI Layout Script ---
+
+    function toggleSidebar() {
+      const sb = $('sidebar');
+      const float = $('floating-expand-btn');
+      sb.classList.toggle('collapsed');
+      float.style.display = sb.classList.contains('collapsed') ? 'block' : 'none';
+    }
+
+    function toggleEditor() {
+      const pane = $('editor-pane');
+      pane.classList.toggle('collapsed');
+    }
+
+    function togglePreview() {
+      const pane = $('preview-pane');
+      pane.classList.toggle('collapsed');
+    }
+
+    function applyZoom(val) {
+      const content = $('pv-content');
+      content.style.transform = `scale(${val})`;
+      $('zoom-val').textContent = Math.round(val * 100) + '%';
+      localStorage.setItem(LS_ZOOM_KEY, val);
+    }
+
+    // Resizers Logic
+    function initResizer(resizerId, panelId, isLeft) {
+      const resizer = $(resizerId);
+      const panel = $(panelId);
+      let startX, startWidth;
+
+      resizer.addEventListener('mousedown', e => {
+        startX = e.clientX;
+        startWidth = panel.offsetWidth;
+        resizer.classList.add('dragging');
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+        document.body.style.cursor = 'col-resize';
+      });
+
+      function onMouseMove(e) {
+        const delta = isLeft ? e.clientX - startX : startX - e.clientX;
+        const newWidth = startWidth + delta;
+        if (newWidth > 100) panel.style.width = newWidth + 'px';
+      }
+
+      function onMouseUp() {
+        resizer.classList.remove('dragging');
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        document.body.style.cursor = '';
+      }
+    }
+
+    initResizer('resizer-1', 'sidebar', true);
+    initResizer('resizer-2', 'editor-pane', true);
+
+    // Init Zoom
+    const savedZoom = localStorage.getItem(LS_ZOOM_KEY) || 0.7;
+    $('zoom-slider').value = savedZoom;
+    applyZoom(savedZoom);
+
+    document.addEventListener('keydown', e => { if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); saveCard(); } });
+    if (API_BASE) { $('server-url').value = API_BASE; connect(); }
+  </script>
+</body>
+
+</html>
