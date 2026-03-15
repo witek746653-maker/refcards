@@ -8,7 +8,7 @@ from flask import Flask, request, send_file, send_from_directory, jsonify # type
 import markdown # type: ignore
 from bs4 import BeautifulSoup # type: ignore
 from weasyprint import HTML as WP_HTML # type: ignore
-import warnings, os, io, sqlite3, uuid, re
+import warnings, os, io, sqlite3, uuid
 from datetime import datetime, timezone
 
 warnings.filterwarnings("ignore")
@@ -103,10 +103,6 @@ strong{{font-weight:700;color:{p}}}
 em{{color:#555}}
 hr{{border:none;border-top:1px solid #dde;margin:4px 0}}
 a{{color:{ac}}}
-.lyric-block{{margin:6px 0;break-inside:auto}}
-.lyric-pair{{display:grid;grid-template-columns:3fr 2fr;column-gap:10px;line-height:1.6;padding:1.5px 0;border-bottom:1px solid rgba(0,0,0,0.05)}}
-.lp-orig{{font-style:italic}}
-.lp-trans{{font-size:0.9em;color:#666}}
 """
 
 def parse_front_matter(text):
@@ -124,34 +120,6 @@ def parse_front_matter(text):
 
 def wrap_sections(html_body):
     soup = BeautifulSoup(html_body, "html.parser")
-
-    # ── Lyric pairs: "оригинал | перевод" → двухколоночный блок ────────────
-    for p_tag in list(soup.find_all('p')):
-        inner = p_tag.decode_contents()
-        parts = re.split(r'<br\s*/?>', inner)
-        parts = [pt.strip() for pt in parts if pt.strip()]
-        pipe_count = sum(1 for pt in parts if '|' in pt)
-        if not parts or pipe_count < len(parts) * 0.5:
-            continue
-        block_html = '<div class="lyric-block">'
-        for part in parts:
-            if '|' in part:
-                idx = part.index('|')
-                orig_text = part[:idx].strip()
-                trans_text = part[idx + 1:].strip()
-                block_html += (
-                    f'<div class="lyric-pair">'
-                    f'<span class="lp-orig">{orig_text}</span>'
-                    f'<span class="lp-trans">{trans_text}</span>'
-                    f'</div>'
-                )
-            else:
-                block_html += f'<p>{part}</p>'
-        block_html += '</div>'
-        new_el = BeautifulSoup(block_html, 'html.parser').find('div', class_='lyric-block')
-        if new_el:
-            p_tag.replace_with(new_el)
-
     def group_by(elements, tag_name, div_class):
         groups, current, has_h = [], [], False
         for el in elements:
@@ -188,6 +156,7 @@ def build_pdf(markdown_text):
     domain  = meta.get("domain", "default")
     density = meta.get("density", "medium")
     t    = THEMES.get(domain, THEMES["default"])
+    # Явное приведение типов для линтера
     base_bpt = float(t.get("bpt", 8.0))
     adj = 0.0
     if density == "high": adj = -0.5
@@ -297,10 +266,13 @@ def cards_import():
             if not file.filename.endswith('.md'): continue
             content = file.read().decode('utf-8', errors='ignore')
             meta, body = parse_front_matter(content)
+            
             cid  = str(uuid.uuid4())
             ts   = now_iso()
+            # Имя: из метаданных или имя файла без расширения
             name = meta.get("name", file.filename.rsplit('.', 1)[0])
             domain = meta.get("domain", "default")
+            
             db.execute(
                 "INSERT INTO cards (id,name,domain,content,created_at,updated_at) VALUES (?,?,?,?,?,?)",
                 (cid, name, domain, content, ts, ts)

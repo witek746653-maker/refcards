@@ -654,6 +654,7 @@
         const frame = $('preview-frame');
         if (frame) {
           frame.style.height = e.data.height + 'px';
+          // Также убираем ограничение с контейнера pv-content
           $('pv-content').style.height = 'auto';
         }
       }
@@ -732,11 +733,6 @@
         figure:hover img{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,0.12)}
         figcaption{font-size:7.5pt;color:var(--text-dim);margin-top:8px;font-style:italic;text-align:center;max-width:80%}
         figcaption::before{counter-increment:img-nb;content:"• " counter(img-nb) " • ";font-weight:700;color:var(--accent);margin-right:4px}
-        .lyric-block{margin:6px 0}
-        .lyric-pair{display:grid;grid-template-columns:3fr 2fr;column-gap:10px;line-height:1.7;padding:2px 0}
-        .lp-orig{font-style:italic;color:inherit}
-        .lp-trans{font-size:0.9em;color:#888}
-        .lyric-label{font-size:7pt;font-weight:700;color:#aaa;letter-spacing:0.08em;text-transform:uppercase;margin:12px 0 3px}
       `;
     }
 
@@ -771,6 +767,7 @@
             if (hr1 && hr1.tagName === 'HR') {
               let table = hr1.nextElementSibling;
               if (table && table.tagName === 'TABLE') {
+                // Проверяем: есть ли аннотация после TABLE — HR — italic P
                 let afterTable = table.nextElementSibling;
                 let annotation = null;
                 if (afterTable && afterTable.tagName === 'HR') {
@@ -784,21 +781,24 @@
                 headerInfo.className = 'header-info';
                 root.insertBefore(headerInfo, next);
 
+                // Кол 1: Аннотация (если есть)
                 const annoDiv = doc.createElement('div');
                 annoDiv.className = 'meta-annotation';
                 if (annotation) {
                   annoDiv.innerHTML = annotation.innerHTML;
                 } else {
                   annoDiv.style.display = 'none';
-                  headerInfo.style.gridTemplateColumns = '1fr 1fr';
+                  headerInfo.style.gridTemplateColumns = '1fr 1fr'; // fallback двухколоночный
                 }
                 headerInfo.appendChild(annoDiv);
 
+                // Кол 2: Метатекст (Область, Раздел, ...)
                 const leftDiv = doc.createElement('div');
                 leftDiv.className = 'meta-left';
                 leftDiv.innerHTML = next.innerHTML.replace(/\n/g, '<br>');
                 headerInfo.appendChild(leftDiv);
 
+                // Кол 3: Статусы (таблица метрик)
                 const rightDiv = doc.createElement('div');
                 rightDiv.className = 'meta-right';
                 const rows = table.querySelectorAll('tbody tr');
@@ -817,6 +817,7 @@
                 });
                 headerInfo.appendChild(rightDiv);
 
+                // Убираем все источники
                 next.remove(); hr1.remove(); table.remove();
                 if (annotation) { afterTable.remove(); annotation.remove(); }
 
@@ -840,6 +841,7 @@
           const cap = doc.createElement('figcaption');
           cap.textContent = img.alt;
 
+          // Сохраняем атрибуты
           const newImg = img.cloneNode(true);
           fig.appendChild(newImg);
           fig.appendChild(cap);
@@ -870,68 +872,6 @@
           if (img && (img.title === 'full' || img.alt.includes('!!!'))) {
             fig.classList.add('full-width');
           }
-        });
-
-        // ── Lyric code blocks: pre>code с "оригинал | перевод" → двухколоночный блок ──
-        [...root.querySelectorAll('pre > code')].forEach(code => {
-          const pre = code.parentElement;
-          const lines = code.textContent.split('\n').map(l => l.trim()).filter(Boolean);
-          const pipeCount = lines.filter(l => l.includes('|')).length;
-          if (!lines.length || pipeCount < lines.length * 0.5) return;
-          const block = doc.createElement('div');
-          block.className = 'lyric-block';
-          lines.forEach(line => {
-            if (line.includes('|')) {
-              const idx = line.indexOf('|');
-              const orig = line.slice(0, idx).trim();
-              const trans = line.slice(idx + 1).trim();
-              const pair = doc.createElement('div');
-              pair.className = 'lyric-pair';
-              pair.innerHTML = '<span class="lp-orig">' + orig + '</span><span class="lp-trans">' + trans + '</span>';
-              block.appendChild(pair);
-            } else {
-              const sp = doc.createElement('p');
-              sp.textContent = line;
-              block.appendChild(sp);
-            }
-          });
-          pre.replaceWith(block);
-        });
-
-        // ── Lyric verse labels: [Название строфы] → стилизованный подзаголовок ──────
-        [...root.querySelectorAll('p')].forEach(p => {
-          const text = p.textContent.trim();
-          if (/^\[.+\]$/.test(text)) {
-            const label = doc.createElement('div');
-            label.className = 'lyric-label';
-            label.textContent = text.slice(1, -1);
-            p.replaceWith(label);
-          }
-        });
-
-        // ── Lyric pairs: "оригинал | перевод" → двухколоночный блок ─────────
-        [...root.querySelectorAll('p')].forEach(p => {
-          const lines = p.innerHTML.split(/<br\s*\/?>/i).map(l => l.trim()).filter(Boolean);
-          const pipeCount = lines.filter(l => l.includes('|')).length;
-          if (!lines.length || pipeCount < lines.length * 0.5) return;
-          const block = doc.createElement('div');
-          block.className = 'lyric-block';
-          lines.forEach(line => {
-            if (line.includes('|')) {
-              const idx = line.indexOf('|');
-              const orig = line.slice(0, idx).trim();
-              const trans = line.slice(idx + 1).trim();
-              const pair = doc.createElement('div');
-              pair.className = 'lyric-pair';
-              pair.innerHTML = '<span class="lp-orig">' + orig + '</span><span class="lp-trans">' + trans + '</span>';
-              block.appendChild(pair);
-            } else {
-              const sp = doc.createElement('p');
-              sp.innerHTML = line;
-              block.appendChild(sp);
-            }
-          });
-          p.replaceWith(block);
         });
 
         // Обернуть только h3 без содержимого — CSS break-after: avoid сделает остальное
@@ -994,6 +934,7 @@
 
               let hasOverflow = isOverflow(currentContent);
               
+              // Логика "Keep with Next": не оставляем заголовок один внизу листа
               if (!hasOverflow && ['H1', 'H2', 'H3', 'H4', 'H5'].includes(el.tagName) && i < elements.length - 1) {
                 let nextEl = elements[i+1];
                 if (nextEl.tagName === 'TABLE') {
@@ -1020,6 +961,7 @@
               if (hasOverflow) {
                 currentContent.removeChild(clone);
 
+                // Если это таблица — переносим по строкам
                 if (el.tagName === 'TABLE') {
                   const rows = Array.from(el.querySelectorAll('tbody tr'));
                   const thead = el.querySelector('thead').cloneNode(true);
@@ -1052,7 +994,9 @@
                   }
                 } 
                 else if (el.classList && (el.classList.contains('section-h3') || el.classList.contains('header-info'))) {
+                  // section-h3/header-info: вставляем дочерние элементы по одному
                   const children = Array.from(el.children);
+                  // Сначала пробуем вставить корневой div (без содержимого) как маркер
                   for (let child of children) {
                     let childClone = child.cloneNode(true);
                     currentContent.appendChild(childClone);
@@ -1061,20 +1005,6 @@
                       pageNum++;
                       currentContent = createPage(pageNum);
                       currentContent.appendChild(child.cloneNode(true));
-                    }
-                  }
-                }
-                else if (el.classList && el.classList.contains('lyric-block')) {
-                  // Lyric block: переносим построчно (пара за парой)
-                  const pairs = Array.from(el.children);
-                  for (let pair of pairs) {
-                    let pairClone = pair.cloneNode(true);
-                    currentContent.appendChild(pairClone);
-                    if (isOverflow(currentContent)) {
-                      currentContent.removeChild(pairClone);
-                      pageNum++;
-                      currentContent = createPage(pageNum);
-                      currentContent.appendChild(pair.cloneNode(true));
                     }
                   }
                 }
@@ -1361,29 +1291,48 @@ density: medium
 
 ---
 
-## 🎵 Параллельный перевод (Lyrics)
-Строки вида \`оригинал | перевод\` автоматически превращаются в двухколоночный блок 60/40.
-Пустые строки между куплетами — просто пустые строки в Markdown.
+## 🖼️ Изображения
+Картинка должна быть на отдельной строке с пустыми строками вокруг.
 
-### Пример
+### В одну колонку
+![Пример](https://picsum.photos/600/400)
+\`![Описание](url)\`
 
-Je ne couche pas dors pas | Я не сплю, не ложусь
-Je pense à mes amours | Я думаю о своих любовях
-Si dérisoires | Таких жалких
+### Локальный файл (из папки uploads)
+\`![Чашка кофе](/uploads/cup.jpg)\`
+
+### На весь лист (Wide)
+![!!! Пример широкой](https://picsum.photos/1200/400)
+\`![!!! Описание](url)\` или \`![Описание](url "full")\`
 
 ---
 
-## 🖼️ Изображения
-Картинка должна быть на отдельной строке с пустыми строками вокруг.
+## 📊 Таблицы и списки
+
+### 3 колонки (внутри колонки текста)
+| Команда | Описание | Пример |
+|---|---|---|
+| \`ls\` | Список файлов | \`ls -la\` |
+| \`cd\` | Перейти | \`cd /home\` |
+
+---
+
+### 4+ колонки (на всю ширину листа)
+| Характеристика | Торфяной | Хересный | Фруктовый | Цветочный |
+|---|---|---|---|---|
+| Аромат | Дым, деготь | Изюм, орехи | Яблоко, груша | Луг, мед |
+| Пример | Laphroaig | Macallan | Glenfiddich | Lowlands |
 
 ---
 
 ## 📝 Специальные блоки
-> **Цитата**: Используйте \`>\` для важных мыслей.
+> **Цитата**: Используйте \`>\` для важных мыслей. Выглядит как врезка в журнале.
+
+\`Это код\`: Используйте бэктики для терминов.
 
 ---
 
-Это последний абзац — он станет **Саммари**.`;
+Это последний абзац. Он станет **Саммари** — выводом в рамке в самом конце статьи.`;
 
       const savedMD = localStorage.getItem('refcards-help-custom');
       state.selectedId = 'help';
@@ -1395,6 +1344,7 @@ Si dérisoires | Таких жалких
       $('lock-btn').style.display = 'flex';
       $('reset-help-btn').style.display = 'flex';
 
+      const cardsList = $('card-list');
       const helpItem = { id: 'help', name: '📚 Руководство по стилю', domain: 'default' };
       if (!state.cards.find(c => c.id === 'help')) {
         state.cards.unshift(helpItem);
