@@ -341,7 +341,10 @@
 
     .CodeMirror {
       position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       height: 100%;
       font-size: 14px;
       line-height: 1.6;
@@ -349,22 +352,60 @@
     }
 
     /* IDE Highlighting for Dark Theme */
-    .dark-theme .cm-s-material-darker.CodeMirror { background: #1e1e1e !important; color: #d4d4d4; }
-    .dark-theme .cm-s-material-darker .cm-header { color: #569cd6 !important; font-weight: bold; }
-    .dark-theme .cm-s-material-darker .cm-strong { color: #569cd6 !important; font-weight: bold; }
-    .dark-theme .cm-s-material-darker .cm-em { color: #ce9178 !important; }
-    .dark-theme .cm-s-material-darker .cm-quote { color: #ce9178 !important; }
-    .dark-theme .cm-s-material-darker .cm-comment { color: #6a9955 !important; }
-    .dark-theme .cm-s-material-darker .cm-variable-2 { color: #9cdcfe !important; }
-    .dark-theme .cm-s-material-darker .cm-string { color: #dcdcaa !important; }
-    .dark-theme .cm-s-material-darker .cm-atom { color: #dcdcaa !important; }
-    .dark-theme .cm-s-material-darker .cm-number { color: #b5cea8 !important; }
-    .dark-theme .cm-s-material-darker .cm-link { color: #4fc1ff !important; }
-    .dark-theme .cm-s-material-darker .cm-cursor { border-left: 2px solid #aeafad !important; }
+    .dark-theme .cm-s-material-darker.CodeMirror {
+      background: #1e1e1e !important;
+      color: #d4d4d4;
+    }
+
+    .dark-theme .cm-s-material-darker .cm-header {
+      color: #569cd6 !important;
+      font-weight: bold;
+    }
+
+    .dark-theme .cm-s-material-darker .cm-strong {
+      color: #569cd6 !important;
+      font-weight: bold;
+    }
+
+    .dark-theme .cm-s-material-darker .cm-em {
+      color: #ce9178 !important;
+    }
+
+    .dark-theme .cm-s-material-darker .cm-quote {
+      color: #ce9178 !important;
+    }
+
+    .dark-theme .cm-s-material-darker .cm-comment {
+      color: #6a9955 !important;
+    }
+
+    .dark-theme .cm-s-material-darker .cm-variable-2 {
+      color: #9cdcfe !important;
+    }
+
+    .dark-theme .cm-s-material-darker .cm-string {
+      color: #dcdcaa !important;
+    }
+
+    .dark-theme .cm-s-material-darker .cm-atom {
+      color: #dcdcaa !important;
+    }
+
+    .dark-theme .cm-s-material-darker .cm-number {
+      color: #b5cea8 !important;
+    }
+
+    .dark-theme .cm-s-material-darker .cm-link {
+      color: #4fc1ff !important;
+    }
+
+    .dark-theme .cm-s-material-darker .cm-cursor {
+      border-left: 2px solid #aeafad !important;
+    }
 
     #preview-pane {
       flex: 1;
-      background: #525659;
+      background: #333;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -385,15 +426,16 @@
     }
 
     .zoom-widget {
-      background: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(4px);
-      padding: 4px 12px;
-      border-radius: 20px;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      padding: 6px 16px;
+      border-radius: 24px;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       color: #fff;
-      font-size: 12px;
+      font-size: 13px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
     .zoom-widget input {
@@ -418,7 +460,7 @@
     #preview-scroll-area {
       flex: 1;
       overflow: auto;
-      padding: 40px;
+      padding: 0;
       display: flex;
       justify-content: center;
       align-items: flex-start;
@@ -426,11 +468,8 @@
 
     #pv-content {
       transform-origin: top center;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-      background: #fff;
-      width: 210mm;
-      min-height: 297mm;
-      border-radius: 2px;
+      width: 100%;
+      height: 100%;
       transition: transform 0.1s ease;
     }
 
@@ -529,6 +568,7 @@
     <div class="sb-actions">
       <button id="new-btn" class="btn-action" onclick="createCard()" disabled>+ Новая</button>
       <button id="import-btn" class="btn-action" onclick="importMD()" disabled>Импорт</button>
+      <button class="btn-action" onclick="showHelp()" title="Шпаргалка по оформлению">❓ Справка</button>
       <input type="file" id="md-import-input" multiple hidden onchange="onImportFiles(this)">
     </div>
     <div id="card-list"></div>
@@ -540,6 +580,8 @@
     <div class="toolbar">
       <button class="toggle-view-btn" onclick="toggleTheme()" title="Сменить тему">🌓</button>
       <button class="toggle-view-btn" onclick="toggleEditor()" title="Редактор">📝</button>
+      <button id="lock-btn" class="toggle-view-btn" style="display:none" onclick="toggleHelpLock()" title="Заблокировать/Разблокировать">🔒</button>
+      <button id="reset-help-btn" class="toggle-view-btn" style="display:none" onclick="resetHelp()" title="Восстановить оригинал">♻️</button>
       <input id="card-name-input" placeholder="Название карточки" oninput="onNameChange()" disabled>
       <select id="domain-select" onchange="onDomainChange(this.value)" disabled>
         <option value="programming">Программирование</option>
@@ -559,6 +601,8 @@
         <option value="high">Плотно</option>
       </select>
       <button id="save-btn" class="btn-action" onclick="saveCard()" disabled>Сохранить</button>
+      <button id="upload-btn" class="btn-action" onclick="uploadImage()" disabled title="Загрузить картинку">📎</button>
+      <input type="file" id="img-upload-input" accept="image/*" hidden onchange="onImgUpload(this)">
       <button id="export-btn" class="btn-action" onclick="exportPDF()" disabled>Экспорт PDF</button>
       <button class="toggle-view-btn" onclick="togglePreview()" title="Предпросмотр">👁️</button>
     </div>
@@ -573,10 +617,13 @@
       <div id="preview-pane">
         <div class="preview-controls">
           <div class="zoom-widget">
+            <span style="border-right: 1px solid rgba(255,255,255,0.2); padding-right: 10px; margin-right: 2px;">
+              Страниц: <b id="total-pages">0</b>
+            </span>
             <span>Зум:</span>
-            <input type="range" min="0.3" max="2" step="0.05" value="0.7" id="zoom-slider"
+            <input type="range" min="0.3" max="2" step="0.01" value="0.7" id="zoom-slider"
               oninput="applyZoom(this.value)">
-            <span id="zoom-val">70%</span>
+            <span id="zoom-val" style="min-width: 40px">70%</span>
           </div>
         </div>
         <div id="preview-scroll-area">
@@ -595,6 +642,21 @@
     const LS_SERVER_KEY = 'refcards-server-url';
     const LS_ZOOM_KEY = 'refcards-preview-zoom';
     let API_BASE = localStorage.getItem(LS_SERVER_KEY) || '';
+
+    window.addEventListener('message', e => {
+      if (e.data.type === 'pageCount') {
+        const el = $('total-pages');
+        if (el) el.textContent = e.data.count;
+      }
+      if (e.data.type === 'frameResized') {
+        const frame = $('preview-frame');
+        if (frame) {
+          frame.style.height = e.data.height + 'px';
+          // Также убираем ограничение с контейнера pv-content
+          $('pv-content').style.height = 'auto';
+        }
+      }
+    });
 
     const DOMAINS = {
       programming: { label: "Программирование", accent: "#4361ee" },
@@ -625,11 +687,48 @@
     function buildCSS(domain, density) {
       const t = THEMES[domain] || THEMES.default;
       let bpt = t.bpt + (density === 'high' ? -0.5 : density === 'low' ? 0.5 : 0), cols = density === 'low' ? 1 : t.cols;
-      return `*{box-sizing:border-box}body{font-family:${t.fb};font-size:${bpt}pt;line-height:1.35;color:${t.body};background:white;column-count:${cols};column-gap:8mm;column-fill:balance;text-align:justify;hyphens:auto;padding:10mm;margin:0;counter-reset:img-nb}h1{column-span:all;font-family:${t.fh};font-size:13pt;font-weight:700;color:${t.p};border-bottom:2px solid ${t.h1l};padding-bottom:3px;margin:0 0 2px;break-after:avoid}h1+p{column-span:all;font-style:italic;color:#666;font-size:7.5pt;margin:0 0 6px}h2{column-span:all;font-family:${t.fh};font-size:9pt;font-weight:700;color:${t.h2t};background:${t.h2b};padding:3px 7px;margin:15px 0 8px;break-after:avoid;border-radius:2px}h3{font-family:${t.fh};font-size:8pt;font-weight:700;color:${t.h3t};background:${t.h3b};border-left:3px solid ${t.h3br};padding:2px 6px;margin:12px 0 6px;break-after:avoid;border-radius:0 2px 2px 0}h4{font-size:7.5pt;font-weight:700;color:${t.p};margin:10px 0 4px;break-after:avoid}.section-h3{break-inside:avoid}p{margin:0 0 3px}pre{background:${t.cb};color:${t.ct};border-radius:3px;padding:4px 7px;font-family:${t.fm};font-size:${t.cpt}pt;line-height:1.3;margin:8px 0;break-inside:auto;border-left:2px solid ${t.cbr};white-space:pre-wrap;word-break:break-all;width:100%;overflow:hidden}code{font-family:${t.fm};background:${t.ib};color:${t.it};padding:0 3px;border-radius:2px;font-size:${t.cpt}pt}pre code{background:none;color:inherit;padding:0}table{width:100%;border-collapse:collapse;margin:10px 0;font-size:7pt;break-inside:auto;overflow:hidden}thead tr{background:${t.th};color:white}thead th{padding:3px 5px;text-align:left;font-weight:600}tbody tr:nth-child(even){background:${t.te}}tbody tr:nth-child(odd){background:white}tbody td{padding:2px 5px;border-bottom:1px solid #dde;vertical-align:top}blockquote{background:${t.qb};border-left:3px solid ${t.qbr};margin:10px 0;padding:5px 10px;border-radius:0 3px 3px 0;font-size:7.5pt;color:${t.qt};break-inside:auto;font-style:italic;width:100%;overflow:hidden}blockquote p{margin:0}ul,ol{margin:8px 0;padding-left:14px;break-inside:auto}li{margin-bottom:2px;line-height:1.3;break-inside:auto}strong{font-weight:700;color:${t.p}}em{color:#555}hr{border:none;border-top:1px solid #dde;margin:4px 0}a{color:${t.ac}}figure{margin:10px 0;break-inside:avoid;display:flex;flex-direction:column;align-items:center}figure img{max-width:100%;border-radius:4px;border:0.5px solid #ddd}figcaption{font-size:7.5pt;color:#666;margin-top:4px;font-style:italic}figcaption::before{counter-increment:img-nb;content:"Рис. " counter(img-nb) ": ";font-weight:700}@page{size:A4;margin:10mm 11mm}`;
+      return `
+        *{box-sizing:border-box}
+        body{background:#333;margin:0;padding:40px 0;display:flex;flex-direction:column;align-items:center;counter-reset:page-nb img-nb}
+        .page{width:210mm;height:297mm;background:white;padding:15mm;padding-bottom:18mm;margin-bottom:25px;box-shadow:0 10px 30px rgba(0,0,0,0.5);position:relative;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+        .page-content{height:260mm;column-count:${cols};column-gap:8mm;column-fill:auto;text-align:justify;hyphens:auto;font-family:${t.fb};font-size:${bpt}pt;line-height:1.35;color:${t.body}}
+        .footer{position:absolute;bottom:8mm;left:15mm;right:15mm;font-family:${t.fh};font-size:7.5pt;color:#999;border-top:0.5px solid #eee;padding-top:2mm;display:flex;justify-content:space-between;column-span:all}
+        .page-even .footer{flex-direction:row-reverse}
+        .intro-lead{column-span:all;font-family:${t.fh};font-size:10pt;font-style:italic;color:#666;border-left:4px solid ${t.h1l};padding:5px 15px;margin:15px 0 25px;background:${t.ib}}
+        .intro-lead + hr { display: none; }
+        .outro-summary{column-span:all;margin:25px 0;padding:15px;background:${t.qb};border:1px solid ${t.qbr};border-radius:4px;font-family:${t.fb};font-size:9pt;font-weight:400;color:${t.qt}}
+        h1{column-span:all;font-family:${t.fh};font-size:13pt;font-weight:700;color:${t.p};border-bottom:2px solid ${t.h1l};padding-bottom:3px;margin:0 0 2px;break-after:avoid}
+        h1+p:not(.intro-lead){column-span:all;font-style:italic;color:#666;font-size:7.5pt;margin:0 0 6px}
+        h2{column-span:all;font-family:${t.fh};font-size:9pt;font-weight:700;color:${t.h2t};background:${t.h2b};padding:3px 7px;margin:25px 0 10px;break-after:avoid;border-radius:2px}
+        h3{font-family:${t.fh};font-size:8pt;font-weight:700;color:${t.h3t};background:${t.h3b};border-left:3px solid ${t.h3br};padding:2px 6px;margin:18px 0 8px;break-after:avoid;border-radius:0 2px 2px 0}
+        h4{font-size:7.5pt;font-weight:700;color:${t.p};margin:10px 0 4px;break-after:avoid}
+        .section-h3, blockquote, figure { break-inside: auto; max-width: 100% }
+        h1, h2, h3, h4 { break-after: avoid; break-inside: avoid; }
+        p{margin:0 0 3px}
+        pre{background:${t.cb};color:${t.ct};border-radius:3px;padding:6px 9px;font-family:${t.fm};font-size:${t.cpt}pt;line-height:1.4;margin:8px 0;border-left:2px solid ${t.cbr};white-space:pre-wrap;word-break:break-all;overflow:hidden;break-inside: avoid;}
+        pre code{background:none;padding:0;color:inherit;font-size:inherit}
+        code{font-family:${t.fm};background:${t.ib};color:${t.it};padding:0 3px;border-radius:2px;font-size:${t.cpt}pt}
+        table{width:100%;border-collapse:collapse;margin:10px 0;font-size:7.5pt;break-inside:auto}
+        table.full-width{column-span:all;margin:15px 0}
+        thead{display:table-header-group;background:${t.th};color:white}
+        thead th{padding:4px 6px;text-align:left;font-weight:600}
+        tbody tr{break-inside:avoid}
+        tbody tr:nth-child(even){background:${t.te}}
+        tbody td{padding:3px 6px;border-bottom:1px solid #dde;vertical-align:top}
+        blockquote{background:${t.qb};border-left:3px solid ${t.qbr};margin:10px 0;padding:5px 10px;border-radius:0 3px 3px 0;font-size:7.5pt;color:${t.qt};font-style:italic;width:100%;overflow:hidden}
+        ul,ol{margin:8px 0;padding-left:14px}
+        li{margin-bottom:2px;line-height:1.3}
+        figure{margin:15px 0;break-inside:avoid;display:flex;flex-direction:column;align-items:center;transition:0.3s}
+        figure.full-width{column-span:all;margin:25px 0;padding:0 20px}
+        figure img{max-width:100%;height:auto;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.08);border:0.5px solid rgba(0,0,0,0.1)}
+        figure:hover img{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,0.12)}
+        figcaption{font-size:7.5pt;color:var(--text-dim);margin-top:8px;font-style:italic;text-align:center;max-width:80%}
+        figcaption::before{counter-increment:img-nb;content:"• " counter(img-nb) " • ";font-weight:700;color:var(--accent);margin-right:4px}
+      `;
     }
 
     function parseFM(text) {
-      const m = text.match(/^---\s*\n([\s\S]*?)\n---\s*(?:\n|$)([\s\S]*)$/);
+      const m = (text || '').trimStart().match(/^---\s*\n([\s\S]*?)\n---\s*(?:\n|$)([\s\S]*)$/);
       if (!m) return { meta: {}, content: text };
       const meta = {};
       m[1].split('\n').forEach(l => {
@@ -649,6 +748,53 @@
       try {
         const doc = new DOMParser().parseFromString(`<div id="r">${html}</div>`, 'text/html');
         const root = doc.getElementById('r');
+
+        // Помечаем первый элемент после H1 как журнальный "Лид"
+        const h1 = root.querySelector('h1');
+        if (h1 && h1.nextElementSibling) {
+          h1.nextElementSibling.classList.add('intro-lead');
+        }
+
+        // Превращаем <img> в <figure> с подписью
+        root.querySelectorAll('img').forEach(img => {
+          const p = img.closest('p');
+          const fig = doc.createElement('figure');
+          const cap = doc.createElement('figcaption');
+          cap.textContent = img.alt;
+          
+          // Сохраняем атрибуты
+          const newImg = img.cloneNode(true);
+          fig.appendChild(newImg);
+          fig.appendChild(cap);
+          
+          if (p && p.childNodes.length === 1) {
+            p.replaceWith(fig);
+          } else {
+            img.replaceWith(fig);
+          }
+        });
+
+        // Помечаем самый последний элемент как журнальное "Саммари"
+        if (root.lastElementChild) {
+          root.lastElementChild.classList.add('outro-summary');
+        }
+
+        // Классификация таблиц по количеству колонок
+        root.querySelectorAll('table').forEach(table => {
+          const firstRow = table.querySelector('tr');
+          if (firstRow && firstRow.children.length > 3) {
+            table.classList.add('full-width');
+          }
+        });
+
+        // Детекция широкоформатных изображений
+        root.querySelectorAll('figure').forEach(fig => {
+          const img = fig.querySelector('img');
+          if (img && (img.title === 'full' || img.alt.includes('!!!'))) {
+            fig.classList.add('full-width');
+          }
+        });
+
         [...root.querySelectorAll('h3')].forEach(h3 => {
           const w = doc.createElement('div'); w.className = 'section-h3';
           root.insertBefore(w, h3); w.appendChild(h3);
@@ -660,13 +806,129 @@
     }
 
     function buildPreviewHTML(md_text) {
-      const { meta, content } = parseFM(md_text);
+      const { meta, content } = parseFM(md_text || '');
+      const cardName = ($('card-name-input')?.value || 'Без названия').replace(/"/g, '&quot;');
+      const domainLabel = (DOMAINS[meta.domain || 'default'] || DOMAINS.default).label;
       const css = buildCSS(meta.domain || 'default', meta.density || 'medium');
       const body = wrapSections(marked.parse(content || ''));
-      return `<!DOCTYPE html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"><style>${css}</style></head><body>${body}</body></html>`;
+
+      return `<!DOCTYPE html><html><head><meta charset="utf-8">
+      <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+      <style>${css}</style></head>
+      <body>
+        <div id="source" style="display:none">${body}</div>
+        <script>
+          const cardName = decodeURIComponent("${encodeURIComponent(cardName)}");
+          const domainLabel = decodeURIComponent("${encodeURIComponent(domainLabel)}");
+
+          function createPage(num) {
+            const page = document.createElement('div');
+            page.className = 'page ' + (num % 2 === 0 ? 'page-even' : 'page-odd');
+            page.innerHTML = \`<div class="page-content"></div>
+              <div class="footer">
+                <span>\${cardName} (\${domainLabel})</span>
+                <span>Стр. \${num}</span>
+              </div>\`;
+            document.body.appendChild(page);
+            return page.querySelector('.page-content');
+          }
+
+          function isOverflow(container) {
+            return container.scrollHeight > container.clientHeight || container.scrollWidth > container.clientWidth + 10;
+          }
+
+          function paginate() {
+            document.querySelectorAll('.page').forEach(p => p.remove());
+            const source = document.getElementById('source');
+            let pageNum = 1;
+            let currentContent = createPage(pageNum);
+
+            const elements = Array.from(source.children);
+            for (let i = 0; i < elements.length; i++) {
+              let el = elements[i];
+              let clone = el.cloneNode(true);
+              currentContent.appendChild(clone);
+
+              let hasOverflow = isOverflow(currentContent);
+              
+              // Логика "Keep with Next": не оставляем заголовок один внизу листа
+              if (!hasOverflow && ['H1', 'H2', 'H3', 'H4', 'H5'].includes(el.tagName) && i < elements.length - 1) {
+                let nextEl = elements[i+1];
+                if (nextEl.tagName === 'TABLE') {
+                  const thead = nextEl.querySelector('thead');
+                  const firstRow = nextEl.querySelector('tbody tr');
+                  if (thead && firstRow) {
+                    let testT = nextEl.cloneNode(false);
+                    testT.appendChild(thead.cloneNode(true));
+                    let tb = document.createElement('tbody');
+                    tb.appendChild(firstRow.cloneNode(true));
+                    testT.appendChild(tb);
+                    currentContent.appendChild(testT);
+                    if (isOverflow(currentContent)) hasOverflow = true;
+                    currentContent.removeChild(testT);
+                  }
+                } else {
+                  let testC = nextEl.cloneNode(true);
+                  currentContent.appendChild(testC);
+                  if (isOverflow(currentContent)) hasOverflow = true;
+                  currentContent.removeChild(testC);
+                }
+              }
+
+              if (hasOverflow) {
+                currentContent.removeChild(clone);
+
+                // Если это таблица — переносим по строкам
+                if (el.tagName === 'TABLE') {
+                  const rows = Array.from(el.querySelectorAll('tbody tr'));
+                  const thead = el.querySelector('thead').cloneNode(true);
+                  let partialTable = el.cloneNode(false);
+                  partialTable.appendChild(thead);
+                  let tbody = document.createElement('tbody');
+                  partialTable.appendChild(tbody);
+                  currentContent.appendChild(partialTable);
+
+                  let addedRows = 0;
+                  for (let row of rows) {
+                    tbody.appendChild(row.cloneNode(true));
+                    if (isOverflow(currentContent)) {
+                      tbody.removeChild(tbody.lastChild);
+                      break;
+                    }
+                    addedRows++;
+                  }
+
+                  const remainingRows = rows.slice(addedRows);
+                  if (remainingRows.length > 0) {
+                    pageNum++;
+                    currentContent = createPage(pageNum);
+                    let nextTable = el.cloneNode(false);
+                    nextTable.appendChild(thead.cloneNode(true));
+                    let nextTbody = document.createElement('tbody');
+                    nextTable.appendChild(nextTbody);
+                    remainingRows.forEach(r => nextTbody.appendChild(r.cloneNode(true)));
+                    currentContent.appendChild(nextTable);
+                  }
+                } 
+                else {
+                  pageNum++;
+                  currentContent = createPage(pageNum);
+                  currentContent.appendChild(clone);
+                }
+              }
+            }
+            window.parent.postMessage({ type: 'pageCount', count: pageNum }, '*');
+            window.parent.postMessage({ type: 'frameResized', height: document.body.offsetHeight + 100 }, '*');
+          }
+          window.onload = () => {
+            setTimeout(paginate, 100);
+            setTimeout(paginate, 1000);
+          };
+        <\/script>
+      </body></html>`;
     }
 
-    let state = { cards: [], selectedId: null, editorText: '', isDirty: false, searchQuery: '', connected: false };
+    let state = { cards: [], selectedId: null, editorText: '', isDirty: false, searchQuery: '', connected: false, isHelpLocked: true };
     let previewTimer = null, textarea = null, previewFrame = null;
     const TMPL = (d = 'programming') => `---\ndomain: ${d}\ndensity: medium\n---\n\n# Название карточки\n\n## Раздел 1\n\n### Тема\n\nКраткое объяснение.\n\n| Параметр | Значение |\n|---|---|\n| Пример | Данные |\n\n> Важное замечание.\n`;
 
@@ -718,6 +980,7 @@
       $('new-btn').disabled = false;
       $('import-btn').disabled = false;
       $('connect-btn').disabled = false;
+      $('upload-btn').disabled = false;
     }
 
     async function api(method, path, body) {
@@ -764,17 +1027,21 @@
       if (state.selectedId) {
         area.classList.remove('empty-state');
         area.innerHTML = '<textarea id="md-textarea"></textarea>';
-        
+
         state.cm = CodeMirror.fromTextArea($('md-textarea'), {
           mode: 'markdown',
           theme: document.body.classList.contains('dark-theme') ? 'material-darker' : 'default',
           lineWrapping: true,
-          viewportMargin: 10
+          viewportMargin: 10,
+          readOnly: state.selectedId === 'help' && state.isHelpLocked
         });
-        
+
         state.cm.setValue(state.editorText);
         state.cm.on('change', () => {
           state.editorText = state.cm.getValue();
+          if (state.selectedId === 'help') {
+            localStorage.setItem('refcards-help-custom', state.editorText);
+          }
           state.isDirty = true;
           updateSaveBtn();
           schedulePreview();
@@ -818,12 +1085,23 @@
       try {
         const card = await api('GET', `/api/cards/${id}`);
         state.selectedId = id; state.editorText = card.content || ''; state.isDirty = false;
+        $('lock-btn').style.display = 'none';
+        $('reset-help-btn').style.display = 'none';
         mountEditor(); mountPreview(); syncToolbar(); renderList();
       } catch (e) { toast('Ошибка'); }
     }
 
     async function saveCard() {
       if (!state.selectedId) return;
+
+      if (state.selectedId === 'help') {
+        localStorage.setItem('refcards-help-custom', state.cm.getValue());
+        state.isDirty = false;
+        updateSaveBtn();
+        toast('Справка сохранена локально');
+        return;
+      }
+
       const { meta } = parseFM(state.editorText);
       const name = $('card-name-input')?.value.trim() || 'Без названия';
       const domain = meta.domain || 'default';
@@ -844,6 +1122,7 @@
     }
 
     async function deleteCard(id, e) {
+      if (id === 'help') { e.stopPropagation(); toast('Эту карточку нельзя удалить'); return; }
       e.stopPropagation();
       if (!confirm('Удалить?')) return;
       try {
@@ -859,15 +1138,124 @@
     function onDensityChange(density) { state.editorText = setFMField(state.editorText, 'density', density); if (textarea) textarea.value = state.editorText; state.isDirty = true; updateSaveBtn(); schedulePreview(); }
 
     async function importMD() { $('md-import-input').click(); }
-    async function onImportFiles(inp) {
+    
+    function uploadImage() { $('img-upload-input').click(); }
+    async function onImgUpload(inp) {
+      if (!inp.files.length) return;
+      const fd = new FormData();
+      fd.append('file', inp.files[0]);
+      try {
+        const res = await fetch(`${API_BASE}/api/upload`, { method: 'POST', body: fd });
+        if (!res.ok) throw new Error('Ошибка связи');
+        const data = await res.json();
+        const cursor = state.cm.getCursor();
+        state.cm.replaceRange(`\n![Описание](${data.url})\n`, cursor);
+        toast('Картинка загружена');
+      } catch (e) { toast('Ошибка загрузки'); }
+      finally { inp.value = ''; }
+    }
+
+    function onImportFiles(inp) {
       if (!inp.files.length) return;
       const fd = new FormData();
       for (const f of inp.files) fd.append('files', f);
-      try {
-        await fetch(`${API_BASE}/api/cards/import`, { method: 'POST', body: fd });
+      fetch(`${API_BASE}/api/cards/import`, { method: 'POST', body: fd }).then(() => {
         loadCards(); toast('Импорт завершен');
-      } catch (e) { toast('Ошибка импорта'); }
-      finally { inp.value = ''; }
+      }).catch(() => toast('Ошибка импорта')).finally(() => inp.value = '');
+    }
+
+    function toggleHelpLock() {
+      state.isHelpLocked = !state.isHelpLocked;
+      $('lock-btn').textContent = state.isHelpLocked ? '🔒' : '🔓';
+      if (state.cm) state.cm.setOption('readOnly', state.isHelpLocked);
+      toast(state.isHelpLocked ? 'Правка запрещена' : 'Режим редактирования');
+    }
+
+    function resetHelp() {
+      if (confirm('Восстановить исходный текст справки?')) {
+        localStorage.removeItem('refcards-help-custom');
+        showHelp();
+      }
+    }
+
+    function showHelp() {
+      const defaultMD = `---
+domain: default
+density: medium
+---
+
+# 📚 Руководство по стилю
+### Как оформлять журнальные карточки
+
+---
+
+Этот первый абзац после заголовка H1 автоматически становится **Лидом**. Он выделен фоном и курсивом. Идеально для вступления.
+
+---
+
+## 🖼️ Изображения
+Картинка должна быть на отдельной строке с пустыми строками вокруг.
+
+### В одну колонку
+![Пример](https://picsum.photos/600/400)
+\`![Описание](url)\`
+
+### Локальный файл (из папки uploads)
+\`![Чашка кофе](/uploads/cup.jpg)\`
+
+### На весь лист (Wide)
+![!!! Пример широкой](https://picsum.photos/1200/400)
+\`![!!! Описание](url)\` или \`![Описание](url "full")\`
+
+---
+
+## 📊 Таблицы и списки
+
+### 3 колонки (внутри колонки текста)
+| Команда | Описание | Пример |
+|---|---|---|
+| \`ls\` | Список файлов | \`ls -la\` |
+| \`cd\` | Перейти | \`cd /home\` |
+
+---
+
+### 4+ колонки (на всю ширину листа)
+| Характеристика | Торфяной | Хересный | Фруктовый | Цветочный |
+|---|---|---|---|---|
+| Аромат | Дым, деготь | Изюм, орехи | Яблоко, груша | Луг, мед |
+| Пример | Laphroaig | Macallan | Glenfiddich | Lowlands |
+
+---
+
+## 📝 Специальные блоки
+> **Цитата**: Используйте \`>\` для важных мыслей. Выглядит как врезка в журнале.
+
+\`Это код\`: Используйте бэктики для терминов.
+
+---
+
+Это последний абзац. Он станет **Саммари** — выводом в рамке в самом конце статьи.`;
+      
+      const savedMD = localStorage.getItem('refcards-help-custom');
+      state.selectedId = 'help';
+      state.editorText = savedMD || defaultMD;
+      state.isDirty = false;
+      state.isHelpLocked = true;
+      
+      $('lock-btn').textContent = '🔒';
+      $('lock-btn').style.display = 'flex';
+      $('reset-help-btn').style.display = 'flex';
+      
+      const cardsList = $('card-list');
+      const helpItem = { id: 'help', name: '📚 Руководство по стилю', domain: 'default' };
+      if (!state.cards.find(c => c.id === 'help')) {
+        state.cards.unshift(helpItem);
+      }
+      
+      mountEditor();
+      mountPreview();
+      syncToolbar();
+      renderList();
     }
 
     async function exportPDF() {

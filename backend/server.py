@@ -106,6 +106,7 @@ a{{color:{ac}}}
 """
 
 def parse_front_matter(text):
+    text = text.lstrip()
     if text.startswith("---"):
         end = text.find("\n---", 3)
         if end != -1:
