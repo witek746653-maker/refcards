@@ -1,11 +1,9 @@
 ---
-domain: Lyrics
+domain: lyrics
 density: medium
 scope: Concept
 module: Module_Lyrics.md
-
 ---
-
 # «Je t'aimais, je t'aime et je t'aimerai» — Francis Cabrel
 
 **Область:** [Lyrics] · Французский язык
@@ -79,86 +77,58 @@ module: Module_Lyrics.md
 
 **📖 Полный текст с параллельным переводом**
 
-`[Куплет 1]`
+[Куплет 1]
 
-Mon enfant, nue sur les galets
-*Моё дитя, обнажённая на гальке*
-Le vent dans tes cheveux défaits
-*Ветер в твоих распущенных волосах*
-Comme un printemps sur mon trajet
-*Как весна, внезапно появившаяся на моём пути*
-Un diamant tombé d'un coffret
-*Бриллиант, выпавший из шкатулки*
+| | |
+| :--- | :--- |
+| Mon enfant, nue sur les galets | Моё дитя, обнажённая на гальке |
+| Le vent dans tes cheveux défaits | Ветер в твоих распущенных волосах |
+| Comme un printemps sur mon trajet | Как весна, внезапно появившаяся на моём пути |
+| Un diamant tombé d'un coffret | Бриллиант, выпавший из шкатулки |
+| Seule la lumière pourrait | Лишь свет мог бы |
+| Défaire nos repères secrets | Разрушить наши тайные ориентиры |
+| Où mes doigts pris sur tes poignets | Где мои пальцы держат твои запястья |
+| Je t'aimais, je t'aime et je t'aimerai | Я любил тебя, я люблю тебя и буду любить тебя |
 
-Seule la lumière pourrait
-*Лишь свет мог бы*
-Défaire nos repères secrets
-*Разрушить наши тайные ориентиры*
-Où mes doigts pris sur tes poignets
-*Где мои пальцы держат твои запястья*
-**Je t'aimais, je t'aime et je t'aimerai**
-***Я любил тебя, я люблю тебя и буду любить тебя***
+> Припев
+> 
+> | | |
+> | :--- | :--- |
+> | *Et quoi que tu fasses* | И что бы ты ни делала |
+> | *L'amour est partout où tu regardes* | Любовь повсюду, куда ни посмотришь |
+> | *Dans les moindres recoins de l'espace* | В самых укромных уголках пространства |
+> | *Dans le moindre rêve où tu t'attardes* | В любом сне, в котором ты задерживаешься |
+> | *L'amour, comme s'il en pleuvait* | Любовь — как будто ею идёт дождь |
+> | *Nu sur les galets…* | Обнажённая на гальке… |
 
-`[Припев]`
+[Куплет 2]
 
-Et quoi que tu fasses
-*И что бы ты ни делала*
-L'amour est partout où tu regardes
-*Любовь повсюду, куда ни посмотришь*
-Dans les moindres recoins de l'espace
-*В самых укромных уголках пространства*
-Dans le moindre rêve où tu t'attardes
-*В любом сне, в котором ты задерживаешься*
-L'amour, comme s'il en pleuvait
-*Любовь — как будто ею идёт дождь*
-Nu sur les galets…
-*Обнажённая на гальке…*
+| | |
+| :--- | :--- |
+| Le ciel prétend qu'il te connaît | Небо утверждает, что знакомо с тобой |
+| Il est si beau, c'est sûrement vrai | Оно так прекрасно — должно быть, это правда |
+| Lui qui ne s'approche jamais | Оно, что никогда не приближается, |
+| Je l'ai vu pris dans tes filets | Я видел его пойманным в твои сети |
+| Le monde a tellement de regrets | У мира так много сожалений |
+| Tellement de choses qu'on promet | Так много вещей, которые обещают |
+| Une seule pour laquelle je suis fait | Одна единственная, для которой я создан |
+| Je t'aimais, je t'aime et je t'aimerai | Я любил тебя, я люблю тебя и буду любить тебя |
 
-`[Куплет 2]`
+[Куплет 3]
 
-Le ciel prétend qu'il te connaît
-*Небо утверждает, что знакомо с тобой*
-Il est si beau, c'est sûrement vrai
-*Оно так прекрасно — должно быть, это правда*
-Lui qui ne s'approche jamais
-*Оно, что никогда не приближается,*
-Je l'ai vu pris dans tes filets
-*Я видел его пойманным в твои сети*
-
-Le monde a tellement de regrets
-*У мира так много сожалений*
-Tellement de choses qu'on promet
-*Так много вещей, которые обещают*
-Une seule pour laquelle je suis fait
-*Одна единственная, для которой я создан*
-**Je t'aimais, je t'aime et je t'aimerai**
-***Я любил тебя, я люблю тебя и буду любить тебя***
-
-`[Куплет 3]`
-
-On s'envolera du même quai
-*Мы улетим с одного и того же перрона*
-Les yeux dans les mêmes reflets
-*Глаза — в одних и тех же отражениях*
-Pour cette vie et celle d'après
-*На эту жизнь и на следующую*
-Tu seras mon unique projet
-*Ты будешь моим единственным проектом*
-
-Je m'en irai poser tes portraits
-*Я пойду и развешу твои портреты*
-À tous les plafonds de tous les palais
-*На потолках всех дворцов*
-Sur tous les murs que je trouverai
-*На всех стенах, что найду*
-Et juste en dessous, j'écrirai
-*И прямо под ними напишу*
-Que seule la lumière pourrait…
-*Что лишь свет мог бы…*
-Et mes doigts pris sur tes poignets
-*И мои пальцы, держащие твои запястья*
-**Je t'aimais, je t'aime et je t'aimerai**
-***Я любил тебя, я люблю тебя и буду любить тебя***
+| | |
+| :--- | :--- |
+| On s'envolera du même quai | Мы улетим с одного и того же перрона |
+| Les yeux dans les mêmes reflets | Глаза — в одних и тех же отражениях |
+| Pour cette vie et celle d'après | На эту жизнь и на следующую |
+| Tu seras mon unique projet | Ты будешь моим единственным проектом |
+| Je m'en irai poser tes portraits | Я пойду и развешу твои портреты |
+| À tous les plafonds de tous les palais | На потолках всех дворцов |
+| Sur tous les murs que je trouverai | На всех стенах, что найду |
+| Et juste en dessous, j'écrirai | И прямо под ними напишу |
+| Que seule la lumière pourrait… | Что лишь свет мог бы… |
+| Et mes doigts pris sur tes poignets | И мои пальцы, держащие твои запястья |
+| Je t'aimais, je t'aime et je t'aimerai | Я любил тебя, я люблю тебя и буду любить тебя |
 
 ---
 
@@ -289,8 +259,6 @@ Et mes doigts pris sur tes poignets
 
 ---
 
-#область/Lyrics #тип/Song #уровень/B1-B2 #язык/FR
-
----
-
 **Источник:** Francis Cabrel, «Samedi soir sur la Terre», Chandelle Productions, 1994. Paroles et musique: Francis Cabrel.
+
+#область/Lyrics #тип/Song #уровень/B1-B2 #язык/FR

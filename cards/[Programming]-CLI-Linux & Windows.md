@@ -250,8 +250,6 @@ touch index.html
 
 ---
 
-#область/Programming #тип/Tool #уровень/Foundations
-
----
-
 **Источник:** Linux man pages · bash.org · tldr.sh · Microsoft PowerShell Docs
+
+#область/Programming #тип/Tool #уровень/Foundations

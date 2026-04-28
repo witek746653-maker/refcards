@@ -553,7 +553,7 @@
 
   <div id="sidebar">
     <div class="sb-header">
-      <h1>Refcards</h1>
+      <h1>Refcards <small style="font-size:9px; opacity:0.5">v.2.4-FIX</small></h1>
       <button class="icon-btn" onclick="toggleSidebar()" title="Свернуть">◀</button>
     </div>
     <div class="conn-wrap">
@@ -567,7 +567,8 @@
     </div>
     <div class="sb-actions">
       <button id="new-btn" class="btn-action" onclick="createCard()" disabled>+ Новая</button>
-      <button id="import-btn" class="btn-action" onclick="importMD()" disabled>Импорт</button>
+      <button id="sync-btn" class="btn-action" onclick="syncFiles()" disabled>🔄 Синхронизация</button>
+      <button id="import-btn" class="btn-action" onclick="importMD()" disabled style="display:none">Импорт</button>
       <button class="btn-action" onclick="showHelp()" title="Шпаргалка по оформлению">❓ Справка</button>
       <input type="file" id="md-import-input" multiple hidden onchange="onImportFiles(this)">
     </div>
@@ -605,7 +606,7 @@
       <button id="save-btn" class="btn-action" onclick="saveCard()" disabled>Сохранить</button>
       <button id="upload-btn" class="btn-action" onclick="uploadImage()" disabled title="Загрузить картинку">📎</button>
       <input type="file" id="img-upload-input" accept="image/*" hidden onchange="onImgUpload(this)">
-      <button id="export-btn" class="btn-action" onclick="exportPDF()" disabled>Экспорт PDF</button>
+      <button id="export-btn" class="btn-action" onclick="exportMD()" disabled>Экспорт MD</button>
       <button class="toggle-view-btn" onclick="togglePreview()" title="Предпросмотр">👁️</button>
     </div>
 
@@ -691,8 +692,8 @@
       return `
         *{box-sizing:border-box}
         body{background:#333;margin:0;padding:40px 0;display:flex;flex-direction:column;align-items:center;counter-reset:page-nb img-nb}
-        .page{width:210mm;height:297mm;background:white;padding:15mm;padding-bottom:18mm;margin-bottom:25px;box-shadow:0 10px 30px rgba(0,0,0,0.5);position:relative;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
-        .page-content{height:260mm;column-count:${cols};column-gap:8mm;column-fill:auto;text-align:justify;hyphens:auto;font-family:${t.fb};font-size:${bpt}pt;line-height:1.35;color:${t.body}}
+        .page{width:210mm;height:297mm;background:white;padding:15mm;padding-bottom:18mm;margin-bottom:25px;box-shadow:0 10px 30px rgba(0,0,0,0.5);position:relative;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;orphans:3;widows:3}
+        .page-content{height:260mm;column-count:${cols};column-gap:8mm;column-fill:auto;text-align:justify;hyphens:auto;font-family:${t.fb};font-size:${bpt}pt;line-height:1.35;color:${t.body};orphans:3;widows:3}
         .footer{position:absolute;bottom:8mm;left:15mm;right:15mm;font-family:${t.fh};font-size:7.5pt;color:#999;border-top:0.5px solid #eee;padding-top:2mm;display:flex;justify-content:space-between;column-span:all}
         .page-even .footer{flex-direction:row-reverse}
         .intro-lead{column-span:all;font-family:${t.fh};font-size:10pt;font-style:italic;color:#666;border-left:4px solid ${t.h1l};padding:5px 15px;margin:15px 0 25px;background:${t.ib}}
@@ -705,18 +706,22 @@
         .header-info .meta-val-key{font-weight:600;white-space:nowrap}
         .header-info .meta-val-value{}
         .outro-summary{column-span:all;margin:25px 0;padding:15px;background:${t.qb};border:1px solid ${t.qbr};border-radius:4px;font-family:${t.fb};font-size:9pt;font-weight:400;color:${t.qt}}
-        h1{column-span:all;font-family:${t.fh};font-size:13pt;font-weight:700;color:${t.p};border-bottom:2px solid ${t.h1l};padding-bottom:3px;margin:0 0 2px;break-after:avoid}
+        h1{column-span:all;font-family:${t.fh};font-size:13pt;font-weight:700;color:${t.p};border-bottom:2px solid ${t.h1l};padding-bottom:3px;margin:0 0 2px;break-after:avoid-page;break-inside:avoid}
         h1+p:not(.intro-lead){column-span:all;font-style:italic;color:#666;font-size:7.5pt;margin:0 0 6px}
-        h2{column-span:all;font-family:${t.fh};font-size:9pt;font-weight:700;color:${t.h2t};background:${t.h2b};padding:3px 7px;margin:25px 0 10px;break-after:avoid;border-radius:2px}
-        h3{font-family:${t.fh};font-size:8pt;font-weight:700;color:${t.h3t};background:${t.h3b};border-left:3px solid ${t.h3br};padding:2px 6px;margin:18px 0 8px;break-after:avoid;border-radius:0 2px 2px 0}
-        h4{font-size:7.5pt;font-weight:700;color:${t.p};margin:10px 0 4px;break-after:avoid}
-        .section-h3 { break-inside: avoid; max-width: 100% }
+        h2{column-span:all;font-family:${t.fh};font-size:9pt;font-weight:700;color:${t.h2t};background:${t.h2b};padding:3px 7px;margin:25px 0 10px;break-after:avoid-page;break-inside:avoid;border-radius:2px}
+        h3{font-family:${t.fh};font-size:8pt;font-weight:700;color:${t.h3t};background:${t.h3b};border-left:3px solid ${t.h3br};padding:2px 6px;margin:18px 0 8px;break-after:avoid-page;break-inside:avoid;border-radius:0 2px 2px 0}
+        h4{font-size:7.5pt;font-weight:700;color:${t.p};margin:10px 0 4px;break-after:avoid-page;break-inside:avoid}
+        .section-h3 { break-inside: auto; max-width: 100% }
         .section-label { break-inside: avoid; max-width: 100% }
         .section-label-wide { column-span: all; break-after: avoid; margin-top: 12px; }
+        .keep-together { break-inside: avoid; width: 100%; display: block; }
         blockquote { break-inside: auto; max-width: 100% }
         code { overflow-wrap: break-word; word-break: break-word; }
-        h1, h2, h3, h4 { break-after: avoid; break-inside: avoid; }
+        .section-h2 > :nth-child(-n+2), .section-h3 > :nth-child(-n+3) { break-after:avoid; break-inside:avoid; }
+        h2 + *, h3 + *, h4 + * { break-before:avoid; }
         p{margin:0 0 3px}
+        hr{width:30%;height:10px;margin:30px auto;border:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 10' fill='%23ccc'%3E%3Ccircle cx='2' cy='5' r='1.5'/%3E%3Cline x1='8' y1='5' x2='92' y2='5' stroke='%23ccc' stroke-width='1'/%3E%3Ccircle cx='98' cy='5' r='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:center;background-size:contain;opacity:0.6}
+        hr.full-span{column-span:all}
         pre{background:${t.cb};color:${t.ct};border-radius:3px;padding:6px 9px;font-family:${t.fm};font-size:${t.cpt}pt;line-height:1.4;margin:8px 0;border-left:2px solid ${t.cbr};white-space:pre-wrap;word-break:break-all;overflow:hidden;break-inside: avoid;}
         pre code{background:none;padding:0;color:inherit;font-size:inherit}
         code{font-family:${t.fm};background:${t.ib};color:${t.it};padding:0 3px;border-radius:2px;font-size:${t.cpt}pt}
@@ -737,7 +742,8 @@
         figcaption{font-size:7.5pt;color:var(--text-dim);margin-top:8px;font-style:italic;text-align:center;max-width:80%}
         figcaption::before{counter-increment:img-nb;content:"• " counter(img-nb) " • ";font-weight:700;color:var(--accent);margin-right:4px}
         .lyric-block{margin:6px 0}
-        .lyric-pair{display:grid;grid-template-columns:3fr 2fr;column-gap:10px;line-height:1.7;padding:2px 0}
+        .lyric-pair{display:grid;grid-template-columns:3fr 2fr;column-gap:10px;line-height:1.7;padding:2px 0;break-inside:avoid}
+        .lyric-pair:nth-child(-n+3){break-after:avoid}
         .lp-orig{font-style:italic;color:inherit}
         .lp-trans{font-size:0.9em;color:#888}
         .lyric-label{font-size:7pt;font-weight:700;color:#aaa;letter-spacing:0.08em;text-transform:uppercase;margin:12px 0 3px}
@@ -865,6 +871,8 @@
           const firstRow = table.querySelector('tr');
           if (firstRow && firstRow.children.length > 3) {
             table.classList.add('full-width');
+            let next = table.nextElementSibling;
+            if (next && next.tagName === 'HR') next.classList.add('full-span');
           }
         });
 
@@ -958,14 +966,33 @@
           }
         });
 
-        // Обернуть только h3 без содержимого — CSS break-after: avoid сделает остальное
-        [...root.querySelectorAll('h3')].forEach(h3 => {
-          const w = doc.createElement('div'); w.className = 'section-h3';
-          root.insertBefore(w, h3); w.appendChild(h3);
-          // Переносим только первый элемент сразу после заголовка (keep-with-next)
-          const firstChild = w.nextSibling;
-          if (firstChild && !['H1', 'H2', 'H3'].includes(firstChild.nodeName)) {
-            w.appendChild(firstChild);
+        // Группировка H2 (Заголовок + Копирайт) — на всю ширину
+        [...root.querySelectorAll('h2')].forEach(h2 => {
+          if (h2.closest('.h2-keep-all')) return;
+          const wrapper = doc.createElement('div');
+          wrapper.className = 'h2-keep-all';
+          wrapper.style.columnSpan = 'all';
+          wrapper.style.breakAfter = 'avoid';
+          wrapper.style.breakInside = 'avoid';
+          h2.parentNode.insertBefore(wrapper, h2);
+          wrapper.appendChild(h2);
+          let next = wrapper.nextElementSibling;
+          if (next && next.tagName === 'P' && next.textContent.length < 250) {
+            wrapper.appendChild(next);
+          }
+        });
+
+        // Группировка остальных (H3, H4, метки куплетов) — внутри колонок
+        [...root.querySelectorAll('h3, h4, .lyric-label')].forEach(h => {
+          if (h.closest('.keep-together') || h.closest('.h2-keep-all')) return;
+          const wrapper = doc.createElement('div');
+          wrapper.className = 'keep-together';
+          h.parentNode.insertBefore(wrapper, h);
+          wrapper.appendChild(h);
+          while (wrapper.nextElementSibling && !['H1', 'H2', 'H3', 'H4', 'HR'].includes(wrapper.nextElementSibling.tagName)) {
+            let n = wrapper.nextElementSibling;
+            wrapper.appendChild(n);
+            if (['TABLE', 'DIV'].includes(n.tagName) || (n.tagName === 'P' && n.textContent.length > 150)) break;
           }
         });
         return root.innerHTML;
@@ -1018,27 +1045,53 @@
 
               let hasOverflow = isOverflow(currentContent);
               
-              if (!hasOverflow && ['H1', 'H2', 'H3', 'H4', 'H5'].includes(el.tagName) && i < elements.length - 1) {
-                let nextEl = elements[i+1];
-                if (nextEl.tagName === 'TABLE') {
-                  const thead = nextEl.querySelector('thead');
-                  const firstRow = nextEl.querySelector('tbody tr');
-                  if (thead && firstRow) {
-                    let testT = nextEl.cloneNode(false);
-                    testT.appendChild(thead.cloneNode(true));
-                    let tb = document.createElement('tbody');
-                    tb.appendChild(firstRow.cloneNode(true));
-                    testT.appendChild(tb);
-                    currentContent.appendChild(testT);
-                    if (isOverflow(currentContent)) hasOverflow = true;
-                    currentContent.removeChild(testT);
+              if (!hasOverflow && i < elements.length - 1) {
+                const isHeader = ['H1', 'H2', 'H3', 'H4', 'H5'].includes(el.tagName) || 
+                               el.classList.contains('h2-keep-all') || 
+                               el.classList.contains('keep-together') || 
+                               el.classList.contains('section-label');
+                
+                if (isHeader) {
+                  let nextIdx = i + 1;
+                  let addedTestElements = [];
+                  
+                  while (nextIdx < elements.length) {
+                    let nextEl = elements[nextIdx];
+                    let isHeavy = nextEl.tagName === 'TABLE' || nextEl.classList.contains('lyric-block') || (nextEl.tagName === 'P' && nextEl.textContent.length > 150);
+                    
+                    if (isHeavy) {
+                      let chunk = nextEl.cloneNode(false);
+                      const rows = Array.from(nextEl.querySelectorAll('.lyric-pair, tbody tr'));
+                      const subContainer = nextEl.tagName === 'TABLE' ? document.createElement('tbody') : chunk;
+                      if (nextEl.tagName === 'TABLE') {
+                        const thead = nextEl.querySelector('thead');
+                        if (thead) chunk.appendChild(thead.cloneNode(true));
+                        chunk.appendChild(subContainer);
+                      }
+                      for(let j=0; j<Math.min(3, rows.length); j++) {
+                        subContainer.appendChild(rows[j].cloneNode(true));
+                      }
+                      addedTestElements.push(chunk);
+                      break; 
+                    } else {
+                      addedTestElements.push(nextEl.cloneNode(true));
+                      if (['H1', 'H2', 'H3', 'H4'].includes(nextEl.tagName)) break;
+                      nextIdx++;
+                    }
                   }
-                } else {
-                  let testC = nextEl.cloneNode(true);
-                  currentContent.appendChild(testC);
+
+                  for(let el of addedTestElements) {
+                      currentContent.appendChild(el);
+                  }
                   if (isOverflow(currentContent)) hasOverflow = true;
-                  currentContent.removeChild(testC);
+                  for(let el of addedTestElements) {
+                      currentContent.removeChild(el);
+                  }
                 }
+              }
+
+              if (hasOverflow && currentContent.children.length <= 1) {
+                hasOverflow = false;
               }
 
               if (hasOverflow) {
@@ -1075,12 +1128,28 @@
                     currentContent.appendChild(nextTable);
                   }
                 } 
-                else if (el.classList && (el.classList.contains('section-h3') || el.classList.contains('header-info'))) {
+                else if (el.classList && (el.classList.contains('section-h3') || el.classList.contains('header-info') || el.classList.contains('section-label') || el.classList.contains('keep-together') || el.classList.contains('h2-keep-all'))) {
                   const children = Array.from(el.children);
-                  for (let child of children) {
+                  let stickyCount = Math.min(3, children.length);
+                  for (let idx = 0; idx < children.length; idx++) {
+                    let child = children[idx];
                     let childClone = child.cloneNode(true);
                     currentContent.appendChild(childClone);
-                    if (isOverflow(currentContent)) {
+
+                    let mustMove = false;
+                    // Если это начало блока, проверяем, влезет ли вся "связка" (заголовок + 2 след. элемента)
+                    if (idx === 0 && stickyCount > 1) {
+                      let testItems = [];
+                      for (let s = 1; s < stickyCount; s++) {
+                        let tc = children[s].cloneNode(true);
+                        testItems.push(tc);
+                        currentContent.appendChild(tc);
+                      }
+                      if (isOverflow(currentContent)) mustMove = true;
+                      testItems.forEach(tc => currentContent.removeChild(tc));
+                    }
+
+                    if (isOverflow(currentContent) || mustMove) {
                       currentContent.removeChild(childClone);
                       pageNum++;
                       currentContent = createPage(pageNum);
@@ -1089,12 +1158,22 @@
                   }
                 }
                 else if (el.classList && el.classList.contains('lyric-block')) {
-                  // Lyric block: переносим построчно (пара за парой)
                   const pairs = Array.from(el.children);
-                  for (let pair of pairs) {
+                  for (let idx = 0; idx < pairs.length; idx++) {
+                    let pair = pairs[idx];
                     let pairClone = pair.cloneNode(true);
                     currentContent.appendChild(pairClone);
-                    if (isOverflow(currentContent)) {
+
+                    let mustMove = false;
+                    // Первые 2 строки песни всегда должны быть связаны с предыдущим элементом (заголовком)
+                    if (idx < 2 && idx < pairs.length - 1) {
+                      let nextClone = pairs[idx + 1].cloneNode(true);
+                      currentContent.appendChild(nextClone);
+                      if (isOverflow(currentContent)) mustMove = true;
+                      currentContent.removeChild(nextClone);
+                    }
+
+                    if (isOverflow(currentContent) || mustMove) {
                       currentContent.removeChild(pairClone);
                       pageNum++;
                       currentContent = createPage(pageNum);
@@ -1170,16 +1249,18 @@
       $('domain-select').disabled = false;
       $('density-select').disabled = false;
       $('new-btn').disabled = false;
+      $('sync-btn').disabled = false;
       $('import-btn').disabled = false;
       $('connect-btn').disabled = false;
       $('upload-btn').disabled = false;
     }
 
     async function api(method, path, body) {
-      const opts = { method, headers: { 'Content-Type': 'application/json' } };
+      const opts = { method, headers: { 'Content-Type': 'application/json' }, cache: 'no-store' };
       if (body) opts.body = JSON.stringify(body);
-      const r = await fetch(`${API_BASE}${path}`, opts);
-      if (!r.ok) throw new Error(`${method} ${path} → ${r.status}`);
+      const url = `${API_BASE}${path}`;
+      const r = await fetch(url, opts);
+      if (!r.ok) throw new Error(`${method} ${url} → ${r.status}`);
       return r.json();
     }
 
@@ -1329,6 +1410,33 @@
     function onDomainChange(domain) { state.editorText = setFMField(state.editorText, 'domain', domain); if (textarea) textarea.value = state.editorText; state.isDirty = true; updateSaveBtn(); schedulePreview(); }
     function onDensityChange(density) { state.editorText = setFMField(state.editorText, 'density', density); if (textarea) textarea.value = state.editorText; state.isDirty = true; updateSaveBtn(); schedulePreview(); }
 
+    async function syncFiles() {
+      try {
+        const btn = $('sync-btn');
+        btn.textContent = '...'; btn.disabled = true;
+        
+        const res = await api('GET', `/api/data/diff?t=${Date.now()}`);
+        if (!res.has_changes) {
+          toast('Всё синхронизировано, изменений нет');
+          btn.textContent = '🔄 Синхронизация'; btn.disabled = false;
+          return;
+        }
+        
+        const msg = `Найдены отличия между файлами и базой:\n\n- Изменено локально: ${res.modified.length}\n- Новых файлов: ${res.new.length}\n- Удалено/нет на диске: ${res.missing.length}\n\nСинхронизировать базу (приоритет файлов)?`;
+        
+        if (confirm(msg)) {
+          await api('POST', `/api/data/apply?t=${Date.now()}`);
+          toast('Синхронизация завершена');
+          loadCards();
+        }
+        btn.textContent = '🔄 Синхронизация'; btn.disabled = false;
+      } catch (e) {
+        toast('Ошибка: ' + e.message);
+        console.error("Sync error:", e);
+        $('sync-btn').textContent = '🔄 Синхронизация'; $('sync-btn').disabled = false;
+      }
+    }
+
     async function importMD() { $('md-import-input').click(); }
 
     function uploadImage() { $('img-upload-input').click(); }
@@ -1430,18 +1538,22 @@ Si dérisoires | Таких жалких
       renderList();
     }
 
-    async function exportPDF() {
+    async function exportMD() {
       if (!state.selectedId) return;
       const btn = $('export-btn'); btn.textContent = '...'; btn.disabled = true;
       const name = ($('card-name-input')?.value || 'refcard').replace(/\s+/g, '-');
       try {
-        const res = await fetch(`${API_BASE}/api/pdf`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ markdown: state.editorText, filename: name }) });
+        const res = await fetch(`${API_BASE}/api/export`, { 
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' }, 
+          body: JSON.stringify({ markdown: state.editorText, filename: name }) 
+        });
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = `${name}.pdf`; a.click();
-        toast('PDF готов');
-      } catch (err) { toast('Ошибка PDF'); }
-      finally { btn.textContent = 'Экспорт PDF'; btn.disabled = false; }
+        const a = document.createElement('a'); a.href = url; a.download = `${name}.md`; a.click();
+        toast('Файл MD готов');
+      } catch (err) { toast('Ошибка экспорта'); }
+      finally { btn.textContent = 'Экспорт MD'; btn.disabled = false; }
     }
 
     // --- UI Layout Script ---

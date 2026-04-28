@@ -7,12 +7,13 @@ Refcards v2 — общая библиотека на SQLite
 from flask import Flask, request, send_file, send_from_directory, jsonify # type: ignore
 import markdown # type: ignore
 from bs4 import BeautifulSoup # type: ignore
-from weasyprint import HTML as WP_HTML # type: ignore
-import warnings, os, io, sqlite3, uuid, re
+import os, io, sqlite3, uuid, re, warnings, glob
 from datetime import datetime, timezone
 
 warnings.filterwarnings("ignore")
 BASE_DIR    = os.path.dirname(os.path.abspath(__file__))
+CARDS_DIR   = os.path.abspath(os.path.join(BASE_DIR, "..", "cards"))
+os.makedirs(CARDS_DIR, exist_ok=True)
 app = Flask(__name__, static_folder=os.path.abspath(os.environ.get("REFCARDS_FRONTEND", os.path.join(BASE_DIR, "..", "frontend"))))
 
 DB_PATH     = os.path.join(BASE_DIR, "refcards.db")
@@ -51,9 +52,14 @@ def init_db():
                 domain     TEXT NOT NULL DEFAULT 'default',
                 content    TEXT NOT NULL DEFAULT '',
                 created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL
+                updated_at TEXT NOT NULL,
+                filepath   TEXT
             )
         """)
+        try:
+            db.execute("ALTER TABLE cards ADD COLUMN filepath TEXT")
+        except sqlite3.OperationalError:
+            pass
         db.commit()
 
 def now_iso():
@@ -78,15 +84,17 @@ CSS_TMPL = """
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,600;0,700;1,400&display=swap');
 @page {{ size:A4; margin:10mm 11mm; @bottom-right {{ content:counter(page); font-family:{fb}; font-size:7pt; color:#aaa; }} }}
 *{{box-sizing:border-box}}
-body{{font-family:{fb};font-size:{bpt}pt;line-height:1.35;color:{body};background:white;column-count:{cols};column-gap:8mm;column-fill:balance;text-align:justify;hyphens:auto;padding:0;margin:0}}
-h1{{column-span:all;font-family:{fh};font-size:13pt;font-weight:700;color:{p};border-bottom:2px solid {h1l};padding-bottom:3px;margin:0 0 2px 0;break-after:avoid}}
+body{{font-family:{fb};font-size:{bpt}pt;line-height:1.35;color:{body};background:white;column-count:{cols};column-gap:8mm;column-fill:auto;text-align:justify;hyphens:auto;padding:0;margin:0;orphans:3;widows:3}}
+h1{{column-span:all;font-family:{fh};font-size:13pt;font-weight:700;color:{p};border-bottom:2px solid {h1l};padding-bottom:3px;margin:0 0 2px 0;break-after:avoid-page;break-inside:avoid}}
 h1+p{{column-span:all;font-style:italic;color:#666;font-size:7.5pt;margin:0 0 6px 0}}
-h2{{column-span:all;font-family:{fh};font-size:9pt;font-weight:700;color:{h2t};background:{h2b};padding:3px 7px;margin:15px 0 8px 0;break-after:avoid;border-radius:2px}}
-h3{{font-family:{fh};font-size:8pt;font-weight:700;color:{h3t};background:{h3b};border-left:3px solid {h3br};padding:2px 6px;margin:12px 0 6px 0;break-after:avoid;border-radius:0 2px 2px 0}}
-h4{{font-size:7.5pt;font-weight:700;color:{p};margin:10px 0 4px 0;break-after:avoid}}
-.section-h3{{break-inside:avoid;page-break-inside:avoid}}
+h2{{column-span:all;font-family:{fh};font-size:9pt;font-weight:700;color:{h2t};background:{h2b};padding:3px 7px;margin:15px 0 8px 0;break-after:avoid-page;break-inside:avoid;border-radius:2px}}
+h3{{font-family:{fh};font-size:8pt;font-weight:700;color:{h3t};background:{h3b};border-left:3px solid {h3br};padding:2px 6px;margin:12px 0 6px 0;break-after:avoid-page;break-inside:avoid;border-radius:0 2px 2px 0}}
+h4{{font-size:7.5pt;font-weight:700;color:{p};margin:10px 0 4px 0;break-after:avoid-page;break-inside:avoid}}
+.section-h3{{break-inside:auto;page-break-inside:auto}}
+.section-h2 > :nth-child(-n+2), .section-h3 > :nth-child(-n+3) {{ break-after:avoid; break-inside:avoid; }}
+h2 + *, h3 + *, h4 + * {{ break-before:avoid; }}
 p{{margin:0 0 3px 0}}
-pre{{background:{cb};color:{ct};border-radius:3px;padding:4px 7px;font-family:{fm};font-size:{cpt}pt;line-height:1.3;margin:8px 0;break-inside:auto;page-break-inside:auto;border-left:2px solid {cbr};white-space:pre-wrap;word-break:break-all;width:100%;overflow:hidden}}
+pre{{background:{cb};color:{ct};border-radius:3px;padding:4px 7px;font-family:{fm};font-size:{cpt}pt;line-height:1.3;margin:8px 0;break-inside:avoid;page-break-inside:avoid;border-left:2px solid {cbr};white-space:pre-wrap;word-break:break-all;width:100%;overflow:hidden}}
 code{{font-family:{fm};background:{ib};color:{it};padding:0 3px;border-radius:2px;font-size:{cpt}pt}}
 pre code{{background:none;color:inherit;padding:0}}
 table{{width:100%;border-collapse:collapse;margin:10px 0;font-size:7pt;break-inside:auto;page-break-inside:auto;overflow:hidden}}
@@ -104,7 +112,8 @@ em{{color:#555}}
 hr{{border:none;border-top:1px solid #dde;margin:4px 0}}
 a{{color:{ac}}}
 .lyric-block{{margin:6px 0;break-inside:auto}}
-.lyric-pair{{display:grid;grid-template-columns:3fr 2fr;column-gap:10px;line-height:1.6;padding:1.5px 0;border-bottom:1px solid rgba(0,0,0,0.05)}}
+.lyric-pair{{display:grid;grid-template-columns:3fr 2fr;column-gap:10px;line-height:1.6;padding:1.5px 0;border-bottom:1px solid rgba(0,0,0,0.05);break-inside:avoid}}
+.lyric-pair:nth-child(-n+3){{break-after:avoid}}
 .lp-orig{{font-style:italic}}
 .lp-trans{{font-size:0.9em;color:#666}}
 """
@@ -183,26 +192,7 @@ def wrap_sections(html_body):
     for el in final: wrapper.append(el)
     return str(wrapper)
 
-def build_pdf(markdown_text):
-    meta, content = parse_front_matter(markdown_text)
-    domain  = meta.get("domain", "default")
-    density = meta.get("density", "medium")
-    t    = THEMES.get(domain, THEMES["default"])
-    base_bpt = float(t.get("bpt", 8.0))
-    adj = 0.0
-    if density == "high": adj = -0.5
-    elif density == "low": adj = 0.5
-    bpt  = base_bpt + adj
-    cols = int(t.get("cols", 2)) if density != "low" else 1
-    ctx  = dict(t)
-    ctx["bpt"] = bpt
-    ctx["cols"] = cols
-    css  = CSS_TMPL.format(**ctx)
-    md   = markdown.Markdown(extensions=["tables","fenced_code","nl2br"])
-    raw  = md.convert(content)
-    body = wrap_sections(raw)
-    html = f"<!DOCTYPE html><html><head><meta charset='utf-8'><style>{css}</style></head><body>{body}</body></html>"
-    return WP_HTML(string=html).write_pdf()
+# PDF генерация удалена
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -222,15 +212,25 @@ def cards_create():
     data = request.get_json(force=True)
     cid  = str(uuid.uuid4())
     ts   = now_iso()
+    name = data.get("name","Новая карточка")
+    domain = data.get("domain","default")
+    content = data.get("content","")
+    
+    # Save to file
+    safe_name = "".join(c if c.isalnum() or c in "-_ " else "_" for c in name).strip()
+    filename = f"{safe_name}.md" if safe_name else f"{cid}.md"
+    filepath = os.path.join(CARDS_DIR, filename)
+    with open(filepath, "w", encoding="utf-8") as f:
+        f.write(content)
+
     with get_db() as db:
         db.execute(
-            "INSERT INTO cards (id,name,domain,content,created_at,updated_at) VALUES (?,?,?,?,?,?)",
-            (cid, data.get("name","Новая карточка"), data.get("domain","default"),
-             data.get("content",""), ts, ts)
+            "INSERT INTO cards (id,name,domain,content,created_at,updated_at,filepath) VALUES (?,?,?,?,?,?,?)",
+            (cid, name, domain, content, ts, ts, filepath)
         )
         db.commit()
-    return jsonify({"id":cid,"name":data.get("name"),"domain":data.get("domain"),
-                    "created_at":ts,"updated_at":ts}), 201
+    return jsonify({"id":cid,"name":name,"domain":domain,
+                    "created_at":ts,"updated_at":ts,"filepath":filepath}), 201
 
 @app.route("/api/cards/<cid>", methods=["GET"])
 def cards_get(cid):
@@ -249,29 +249,113 @@ def cards_update(cid):
         domain  = data.get("domain",  row["domain"])
         content = data.get("content", row["content"])
         ts = now_iso()
-        db.execute("UPDATE cards SET name=?,domain=?,content=?,updated_at=? WHERE id=?",
-                   (name, domain, content, ts, cid))
+        
+        filepath = row["filepath"]
+        if not filepath or not os.path.exists(filepath):
+            safe_name = "".join(c if c.isalnum() or c in "-_ " else "_" for c in name).strip()
+            filename = f"{safe_name}.md" if safe_name else f"{cid}.md"
+            filepath = os.path.join(CARDS_DIR, filename)
+        
+        # Save to file
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(content)
+
+        db.execute("UPDATE cards SET name=?,domain=?,content=?,updated_at=?,filepath=? WHERE id=?",
+                   (name, domain, content, ts, filepath, cid))
         db.commit()
-    return jsonify({"id":cid,"name":name,"domain":domain,"updated_at":ts})
+    return jsonify({"id":cid,"name":name,"domain":domain,"updated_at":ts,"filepath":filepath})
 
 @app.route("/api/cards/<cid>", methods=["DELETE"])
 def cards_delete(cid):
     with get_db() as db:
+        row = db.execute("SELECT filepath FROM cards WHERE id=?", (cid,)).fetchone()
+        if row and row["filepath"] and os.path.exists(row["filepath"]):
+            os.remove(row["filepath"])
         db.execute("DELETE FROM cards WHERE id=?", (cid,))
         db.commit()
     return jsonify({"deleted":cid})
 
+# ── Синхронизация ─────────────────────────────────────────────────────────────
+
+@app.route("/api/data/diff", methods=["GET", "POST", "OPTIONS"])
+def sync_check():
+    if request.method == "OPTIONS": return '', 204
+    with get_db() as db:
+        db_cards = {row["filepath"]: dict(row) for row in db.execute("SELECT * FROM cards WHERE filepath IS NOT NULL").fetchall()}
+    
+    files_on_disk = glob.glob(os.path.join(CARDS_DIR, "*.md"))
+    
+    modified = []
+    new_files = []
+    missing_files = []
+
+    for fp in files_on_disk:
+        with open(fp, "r", encoding="utf-8") as f:
+            content = f.read()
+        if fp in db_cards:
+            if db_cards[fp]["content"] != content:
+                modified.append({"filepath": fp, "id": db_cards[fp]["id"]})
+            del db_cards[fp]
+        else:
+            new_files.append({"filepath": fp})
+            
+    for fp, card in db_cards.items():
+        missing_files.append({"filepath": fp, "id": card["id"]})
+
+    return jsonify({
+        "modified": modified,
+        "new": new_files,
+        "missing": missing_files,
+        "has_changes": bool(modified or new_files or missing_files)
+    })
+
+@app.route("/api/data/apply", methods=["GET", "POST", "OPTIONS"])
+def sync_apply():
+    if request.method == "OPTIONS": return '', 204
+    check_res = sync_check().get_json()
+    ts = now_iso()
+    with get_db() as db:
+        # Update modified
+        for mod in check_res["modified"]:
+            with open(mod["filepath"], "r", encoding="utf-8") as f:
+                content = f.read()
+            db.execute("UPDATE cards SET content=?, updated_at=? WHERE id=?", (content, ts, mod["id"]))
+            
+        # Insert new
+        for nf in check_res["new"]:
+            with open(nf["filepath"], "r", encoding="utf-8") as f:
+                content = f.read()
+            meta, _ = parse_front_matter(content)
+            cid = str(uuid.uuid4())
+            name = meta.get("name", os.path.basename(nf["filepath"]).replace(".md", ""))
+            domain = meta.get("domain", "default")
+            db.execute(
+                "INSERT INTO cards (id,name,domain,content,created_at,updated_at,filepath) VALUES (?,?,?,?,?,?,?)",
+                (cid, name, domain, content, ts, ts, nf["filepath"])
+            )
+            
+        # For missing, we could delete or nullify filepath. Let's just nullify so we don't lose data entirely.
+        for ms in check_res["missing"]:
+            db.execute("UPDATE cards SET filepath=NULL WHERE id=?", (ms["id"],))
+            
+        db.commit()
+    return jsonify({"success": True})
+
 # ── PDF ──────────────────────────────────────────────────────────────────────
 
-@app.route("/api/pdf", methods=["POST"])
-def api_pdf():
+@app.route("/api/export", methods=["POST"])
+def api_export():
     data     = request.get_json(force=True)
     md_text  = data.get("markdown","")
     filename = "".join(c for c in data.get("filename","refcard") if c.isalnum() or c in "-_ ").strip()
     filename = (filename.replace(" ","-") or "refcard")
-    pdf      = build_pdf(md_text)
-    return send_file(io.BytesIO(pdf), mimetype="application/pdf",
-                     as_attachment=True, download_name=f"{filename}.pdf")
+    
+    return send_file(
+        io.BytesIO(md_text.encode("utf-8")),
+        mimetype="text/markdown",
+        as_attachment=True,
+        download_name=f"{filename}.md"
+    )
 
 @app.route("/api/upload", methods=["POST"])
 def upload_file():
@@ -285,6 +369,10 @@ def upload_file():
 
 @app.route("/uploads/<path:filename>")
 def get_upload(filename):
+    return send_from_directory(UPLOADS_DIR, filename)
+
+@app.route("/backend/uploads/<path:filename>")
+def get_compat_upload(filename):
     return send_from_directory(UPLOADS_DIR, filename)
 
 @app.route("/api/cards/import", methods=["POST"])
@@ -324,4 +412,4 @@ def health():
 if __name__ == "__main__":
     init_db()
     print("\n  Refcards v2  →  http://localhost:5100\n")
-    app.run(host="127.0.0.1", port=5100, debug=False)
+    app.run(host="127.0.0.1", port=5100, debug=True)

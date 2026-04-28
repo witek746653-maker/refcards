@@ -1,4 +1,4 @@
 flask>=3.0.0
 markdown>=3.5.0
-weasyprint>=61.0
+# weasyprint удален
 beautifulsoup4>=4.12.0
