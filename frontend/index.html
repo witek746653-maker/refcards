@@ -710,7 +710,11 @@
         h2{column-span:all;font-family:${t.fh};font-size:9pt;font-weight:700;color:${t.h2t};background:${t.h2b};padding:3px 7px;margin:25px 0 10px;break-after:avoid;border-radius:2px}
         h3{font-family:${t.fh};font-size:8pt;font-weight:700;color:${t.h3t};background:${t.h3b};border-left:3px solid ${t.h3br};padding:2px 6px;margin:18px 0 8px;break-after:avoid;border-radius:0 2px 2px 0}
         h4{font-size:7.5pt;font-weight:700;color:${t.p};margin:10px 0 4px;break-after:avoid}
-        .section-h3, blockquote, figure { break-inside: auto; max-width: 100% }
+        .section-h3 { break-inside: avoid; max-width: 100% }
+        .section-label { break-inside: avoid; max-width: 100% }
+        .section-label-wide { column-span: all; break-after: avoid; margin-top: 12px; }
+        blockquote { break-inside: auto; max-width: 100% }
+        code { overflow-wrap: break-word; word-break: break-word; }
         h1, h2, h3, h4 { break-after: avoid; break-inside: avoid; }
         p{margin:0 0 3px}
         pre{background:${t.cb};color:${t.ct};border-radius:3px;padding:6px 9px;font-family:${t.fm};font-size:${t.cpt}pt;line-height:1.4;margin:8px 0;border-left:2px solid ${t.cbr};white-space:pre-wrap;word-break:break-all;overflow:hidden;break-inside: avoid;}
@@ -932,6 +936,26 @@
             }
           });
           p.replaceWith(block);
+        });
+
+        // Группировка жирных подзаголовков (**5.4. ...**) с первым блоком контента
+        [...root.querySelectorAll('p')].forEach(p => {
+          if (p.closest('.section-label') || p.closest('.section-h3')) return;
+          if (p.children.length !== 1 || p.children[0].tagName !== 'STRONG') return;
+          if (p.textContent.trim() !== p.children[0].textContent.trim()) return;
+          const next = p.nextElementSibling;
+          if (!next || ['H1','H2','H3','H4','HR'].includes(next.tagName)) return;
+          if (next.tagName === 'TABLE' && next.classList.contains('full-width')) {
+            // Полноширинная таблица: заголовок тоже делаем полноширинным (column-span: all)
+            // Оборачивать нельзя — column-span внутри break-inside:avoid не работает
+            p.classList.add('section-label-wide');
+          } else {
+            const w = doc.createElement('div');
+            w.className = 'section-label';
+            p.parentNode.insertBefore(w, p);
+            w.appendChild(p);
+            w.appendChild(next);
+          }
         });
 
         // Обернуть только h3 без содержимого — CSS break-after: avoid сделает остальное
