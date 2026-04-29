@@ -1,0 +1,17 @@
+{
+  "name": "refcards",
+  "version": "1.0.0",
+  "type": "",
+  "module": "",
+  "description": "npm init -y",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Тестов пока нет, но всё ок\""
+  },
+  "author": "",
+  "license": "ISC",
+  "start": "node index.js",
+  "devDependencies": {
+    "vitest": "^3.2.4"
+  }
+}

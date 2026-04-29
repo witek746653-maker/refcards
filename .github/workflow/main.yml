@@ -1,0 +1,20 @@
+name: Project Check           # Понятное название процесса
+on: [push, pull_request]      # Запуск при пуше и при создании запроса на слияние
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Copy Repository # Шаг 1: Копируем код
+        uses: actions/checkout@v4
+
+      - name: Install Node.js # Шаг 2: Устанавливаем "двигатель" для JS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20    # Рекомендуемая стабильная версия
+
+      - name: Install Deps    # Шаг 3: Скачиваем библиотеки (аналог npm install)
+        run: npm ci           # ci (Clean Install) быстрее и надежнее для серверов
+
+      - name: Run Tests       # Шаг 4: Запускаем ваши тесты
+        run: npm test         # Выполнит команду из вашего package.json
