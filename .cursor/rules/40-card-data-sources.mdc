@@ -1,0 +1,6 @@
+# 40 — Card Data Sources
+
+- Primary content: Markdown files in `cards/`.
+- Front-matter fields (YAML-like) must be preserved on import/export.
+- When importing, deduplicate by filename/path and add entries to DB with stable `id`.
+- Do not delete original files automatically; prefer nullifying `filepath` in DB or flagging for review.

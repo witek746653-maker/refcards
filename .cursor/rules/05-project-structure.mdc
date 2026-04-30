@@ -1,0 +1,6 @@
+# 05 — Project Structure
+
+- Frontend and backend separated: `frontend/` and `backend/`.
+- Keep top-level directories minimal; add files to existing folders when possible.
+- Content (Markdown cards) lives in `cards/` and is important for import/export behavior.
+- DB file: `backend/refcards.db` — do not modify schema without migration plan.

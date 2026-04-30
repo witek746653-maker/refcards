@@ -1,0 +1,6 @@
+# 30 — Backend (Flask + SQLite)
+
+- Backend uses Flask and a single SQLite DB (`backend/refcards.db`).
+- Keep endpoints stable: `/api/cards`, `/api/cards/import`, `/api/data/diff`, `/api/data/apply`, `/api/upload`, etc.
+- DB migrations or schema changes require a documented migration script and tests.
+- Use `REFCARDS_FRONTEND` env to override static folder in development.

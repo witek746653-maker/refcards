@@ -1,0 +1,5 @@
+# 20 — Frontend (static / SPA)
+
+- Frontend is a static folder; it should use relative API paths (`/api/...`) when deployed together with backend.
+- Avoid embedding secrets or server-only configs into frontend; use `REFCARDS_FRONTEND` env var for dev overrides.
+- UI should tolerate missing fields coming from Markdown and show fallback values.

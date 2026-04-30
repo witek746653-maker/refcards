@@ -1,0 +1,6 @@
+# 10 — Refcards Context
+
+- Lightweight local knowledge-base: Markdown cards + SQLite index.
+- Cards stored in `cards/` must render correctly to HTML; preserve front-matter fields like `name` and `domain`.
+- Backend exposes simple REST API under `/api/*` for listing, CRUD, import/export and sync.
+- Keep the sync semantics: files on disk are authoritative for content, DB stores metadata and may be updated via sync endpoints.

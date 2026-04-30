@@ -1,0 +1,5 @@
+# 60 — Automated Testing
+
+- Keep tests for core logic in `test_my_logic.py` and add tests for any new API behavior.
+- When adding components or scripts, update test runners and provide simple reproduction steps.
+- Prefer small, focused tests that verify sync/import/export behavior and DB migrations.
